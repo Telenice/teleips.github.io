@@ -1,4 +1,3 @@
-        // Function to toggle between light and dark modes
         function toggleMode() {
             document.body.classList.toggle("dark-mode");
             const modeToggle = document.getElementById("modeToggle");
@@ -9,24 +8,19 @@
             }
         }
 
-        // Check the cookie when the page loads to apply the preferred theme
         window.onload = function () {
-            // Check system's theme preference on page load
             const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-            // Apply dark mode if the system preference is dark
             if (prefersDarkScheme) {
                 document.body.classList.add("dark-mode");
-                document.getElementById("modeToggle").textContent = "☀️";  // Change button text to sun for dark mode
+                document.getElementById("modeToggle").textContent = "☀️";
             } else {
                 document.body.classList.remove("dark-mode");
-                document.getElementById("modeToggle").textContent = "🌙";  // Change button text to moon for light mode
+                document.getElementById("modeToggle").textContent = "🌙";
             }
 
-            // Set event listener for the toggle button
             document.getElementById("modeToggle").addEventListener("click", toggleMode);
 
-            // Fetch and display data from Google Sheets
             const sheetID = "15sxwI1IGcYTz-SC9bY0dO2ipEUGVW-_O";
             const sheetName = "Vapes, Pastilles and Capsules";
             const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
@@ -39,7 +33,7 @@
                     const tableBody = document.querySelector("#stockTable tbody");
 
                     let stockData = [];
-                    let brands = {};  // Use an object to store brands with their lowercase version as key
+                    let brands = {}; 
                     let packSizes = new Set();
 
                     rows.forEach(row => {
@@ -62,11 +56,10 @@
                             stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG, gapPricePG, t21PricePG
                         });
 
-                        // Normalize brand to lowercase and store the original brand name
                         if (brand && brand !== "Unknown") {
                             const brandLowerCase = brand.toLowerCase();
                             if (!brands[brandLowerCase]) {
-                                brands[brandLowerCase] = brand; // Store the original brand name with the lowercase as key
+                                brands[brandLowerCase] = brand;
                             }
                         }
 
@@ -83,12 +76,11 @@
                         tableBody.innerHTML = "";
 
                         stockData.forEach(stock => {
-                            // Make both brand and brandFilter lowercase for case-insensitive comparison
                             const brandLowerCase = stock.brand.trim().toLowerCase();
                             const brandFilterLowerCase = brandFilter.trim().toLowerCase();
 
                             if ((!stockAvailabilityFilter || stock.stockAvailability.trim() === stockAvailabilityFilter.trim()) &&
-                                (!brandFilter || brandLowerCase === brandFilterLowerCase) &&  // Case-insensitive comparison
+                                (!brandFilter || brandLowerCase === brandFilterLowerCase) && 
                                 (!packSizeFilter || stock.packSize.trim() === packSizeFilter.trim())) {
 
                                 let stockAvailabilityClass = "";
@@ -132,7 +124,6 @@
 
                     renderTable();
 
-                    // Add brand options to the dropdown with original case
                     Object.values(brands).forEach(brand => {
                         const option = document.createElement("option");
                         option.value = brand;
