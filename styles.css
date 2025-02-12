@@ -161,3 +161,38 @@ select {
 .mode-toggle.dark {
     color: #fff;
 }
+
+@media (max-width: 768px) {
+    .filter-container {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        width: 100%;
+        table-layout: fixed;  
+    }
+
+    th, td {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    thead {
+        display: block;
+    }
+
+    tbody {
+        display: block;
+        max-height: 400px;
+        overflow-y: scroll;
+    }
+
+    th, td {
+        white-space: nowrap;
+    }
+}
