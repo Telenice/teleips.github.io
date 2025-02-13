@@ -163,10 +163,6 @@ select {
 }
 
 @media (max-width: 768px) {
-    .filter-container {
-        grid-template-columns: 1fr 1fr;
-    }
-
     .table-container {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -174,25 +170,37 @@ select {
 
     table {
         width: 100%;
-        table-layout: fixed;  
+        table-layout: fixed;
+        border-collapse: collapse;
+    }
+
+    thead {
+        position: sticky;
+        top: 0;
+        background-color: #007bff;
+        color: white;
+        z-index: 10;
     }
 
     th, td {
         font-size: 12px;
         padding: 8px;
-    }
-
-    thead {
-        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     tbody {
         display: block;
         max-height: 400px;
-        overflow-y: scroll;
+        overflow-y: auto;
+        width: 100%;
     }
 
-    th, td {
-        white-space: nowrap;
+    tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
     }
 }
+
