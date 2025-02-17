@@ -24,7 +24,7 @@
             const sheetID = "15sxwI1IGcYTz-SC9bY0dO2ipEUGVW-_O";
             const sheetName = "Flowers";
             const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
-
+            
             fetch(url)
                 .then(response => response.text())
                 .then(data => {
@@ -49,7 +49,7 @@
                         const gapPricePG = row.c[10]?.v || "Unknown";
                         const t21PricePG = row.c[11]?.v || "Unknown";
 
-                        if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, irradiation, pricePG, gapPricePG, t21PricePG].includes("Unknown")) {
+                        if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG, gapPricePG, t21PricePG].includes("Unknown")) {
                             return;
                         }
 
