@@ -1,38 +1,28 @@
-<script type="text/javascript">
-    var gk_fileData = {};
-    function loadFileData(filename) {
-      return gk_fileData[filename] || "";
-    }
-    </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Availability</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
-
-    <button class="mode-toggle" id="modeToggle">
-        🌙
-    </button>
-
-    <h2><img src="https://lh7-rt.googleusercontent.com/sheetsz/AHOq17HiIL6kMz0231zDZ2b9XACopFXThaw20DHcTdxanF3Ttz-HYGKtMWzE-zp-VeFHI1S_Z-_4hPeYJQ7yFHnAgyZqFoDPBMALPZfLfboC1VFZz3elGt3uZTUuS_kQtOMTARn37Qr8PEGd7w?key=3Mz44fGmb3mrY0fRBCAT3kVf"
-            alt="Stock Availability"></h2>
-
+    <button class="mode-toggle" id="modeToggle">🌙</button>
+    <h2><img src="https://lh7-rt.googleusercontent.com/sheetsz/AHOq17HiIL6kMz0231zDZ2b9XACopFXThaw20DHcTdxanF3Ttz-HYGKtMWzE-zp-VeFHI1S_Z-_4hPeYJQ7yFHnAgyZqFoDPBMALPZfLfboC1VFZz3elGt3uZTUuS_kQtOMTARn37Qr8PEGd7w?key=3Mz44fGmb3mrY0fRBCAT3kVf" alt="Stock Availability"></h2>
     <div class="filter-container">
+        <div>
+            <label for="search">Search Product:</label>
+            <input type="text" class="filter" id="search" placeholder="Enter product name...">
+        </div>
         <div>
             <label for="typeSelect">Type:</label>
             <select id="typeSelect" onchange="window.location.href = this.value;">
                 <option value="">Select Type</option>
-                <option value="index.html">Flowers</option>
+                <option value="index.html" selected>Flowers</option>
                 <option value="oils.html">Oils</option>
                 <option value="other.html">Other</option>
             </select>
         </div>
-
         <div>
             <label for="stockAvailability">Stock Availability:</label>
             <select class="filter" data-column="stockAvailability" id="stockAvailability">
@@ -43,14 +33,12 @@
                 <option value="To be Ordered">To be Ordered</option>
             </select>
         </div>
-
         <div>
             <label for="brand">Brand:</label>
             <select class="filter" data-column="brand" id="brand">
                 <option value="">All</option>
             </select>
         </div>
-
         <div>
             <label for="thc">THC %:</label>
             <select class="filter" data-column="thc" id="thc">
@@ -61,7 +49,6 @@
                 <option value="30+">30+</option>
             </select>
         </div>
-
         <div>
             <label for="cbd">CBD %:</label>
             <select class="filter" data-column="cbd" id="cbd">
@@ -70,7 +57,6 @@
                 <option value="Balanced">Balanced</option>
             </select>
         </div>
-
         <div>
             <label for="irradiation">Irradiation:</label>
             <select class="filter" data-column="irradiation" id="irradiation">
@@ -79,14 +65,12 @@
                 <option value="No">No</option>
             </select>
         </div>
-
         <div>
             <label for="packSize">Pack Size (G):</label>
             <select class="filter" data-column="packSize" id="packSize">
                 <option value="">All</option>
             </select>
         </div>
-
         <div>
             <label for="gap">GAP:</label>
             <select class="filter" data-column="gap" id="gap">
@@ -96,7 +80,6 @@
             </select>
         </div>
     </div>
-
     <div class="table-container">
         <table id="stockTable">
             <thead>
@@ -117,8 +100,6 @@
             <tbody></tbody>
         </table>
     </div>
-
     <script src="flowers.js"></script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93056ffe985031d4',t:'MTc0NDY1NzEzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
-
+</body>
 </html>

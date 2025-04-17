@@ -1,33 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Availability</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
-
-    <button class="mode-toggle" id="modeToggle">
-        🌙
-    </button>
-
-    <h2><img src="https://lh7-rt.googleusercontent.com/sheetsz/AHOq17HiIL6kMz0231zDZ2b9XACopFXThaw20DHcTdxanF3Ttz-HYGKtMWzE-zp-VeFHI1S_Z-_4hPeYJQ7yFHnAgyZqFoDPBMALPZfLfboC1VFZz3elGt3uZTUuS_kQtOMTARn37Qr8PEGd7w?key=3Mz44fGmb3mrY0fRBCAT3kVf"
-            alt="Stock Availability"></h2>
-
+    <button class="mode-toggle" id="modeToggle">🌙</button>
+    <h2><img src="https://lh7-rt.googleusercontent.com/sheetsz/AHOq17HiIL6kMz0231zDZ2b9XACopFXThaw20DHcTdxanF3Ttz-HYGKtMWzE-zp-VeFHI1S_Z-_4hPeYJQ7yFHnAgyZqFoDPBMALPZfLfboC1VFZz3elGt3uZTUuS_kQtOMTARn37Qr8PEGd7w?key=3Mz44fGmb3mrY0fRBCAT3kVf" alt="Stock Availability"></h2>
     <div class="filter-container">
+        <div>
+            <label for="search">Search Product:</label>
+            <input type="text" class="filter" id="search" placeholder="Enter product name...">
+        </div>
         <div>
             <label for="typeSelect">Type:</label>
             <select id="typeSelect" onchange="window.location.href = this.value;">
                 <option value="">Select Type</option>
                 <option value="index.html">Flowers</option>
-                <option value="oils.html">Oils</option>
+                <option value="oils.html" selected>Oils</option>
                 <option value="other.html">Other</option>
             </select>
         </div>
-
         <div>
             <label for="stockAvailability">Stock Availability:</label>
             <select class="filter" data-column="stockAvailability" id="stockAvailability">
@@ -38,14 +33,12 @@
                 <option value="To be Ordered">To be Ordered</option>
             </select>
         </div>
-
         <div>
             <label for="brand">Brand:</label>
             <select class="filter" data-column="brand" id="brand">
                 <option value="">All</option>
             </select>
         </div>
-
         <div>
             <label for="packSize">Pack Size (ML):</label>
             <select class="filter" data-column="packSize" id="packSize">
@@ -54,26 +47,24 @@
         </div>
     </div>
     <div class="table-container">
-    <table id="stockTable">
-        <thead>
-            <tr>
-                <th>Stock Availability</th>
-                <th>Brand</th>
-                <th>THC %</th>
-                <th>CBD %</th>
-                <th>Strain</th>
-                <th>Pack Size (ML)</th>
-                <th>Sativa:Indica</th>
-                <th>Price P/G</th>
-                <th>GAP Price P/G</th>
-                <th>T21 Price P/G</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</div>
-
+        <table id="stockTable">
+            <thead>
+                <tr>
+                    <th>Stock Availability</th>
+                    <th>Brand</th>
+                    <th>THC %</th>
+                    <th>CBD %</th>
+                    <th>Strain</th>
+                    <th>Pack Size (ML)</th>
+                    <th>Sativa:Indica</th>
+                    <th>Price P/G</th>
+                    <th>GAP Price P/G</th>
+                    <th>T21 Price P/G</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
     <script src="oils.js"></script>
 </body>
-
 </html>

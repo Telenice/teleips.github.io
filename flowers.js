@@ -1,22 +1,17 @@
 function toggleMode() {
     document.body.classList.toggle("dark-mode");
     const modeToggle = document.getElementById("modeToggle");
-    if (document.body.classList.contains("dark-mode")) {
-        modeToggle.textContent = "☀️";
-    } else {
-        modeToggle.textContent = "🌙";
-    }
+    modeToggle.textContent = document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
 }
 
 window.onload = function () {
     const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
-
     if (prefersDarkScheme) {
         document.body.classList.add("dark-mode");
-        document.getElementById("modeToggle").textContent = "☀️"; 
+        document.getElementById("modeToggle").textContent = "☀️";
     } else {
         document.body.classList.remove("dark-mode");
-        document.getElementById("modeToggle").textContent = "🌙"; 
+        document.getElementById("modeToggle").textContent = "🌙";
     }
 
     document.getElementById("modeToggle").addEventListener("click", toggleMode);
@@ -33,7 +28,7 @@ window.onload = function () {
             const tableBody = document.querySelector("#stockTable tbody");
 
             let stockData = [];
-            let brands = {}; 
+            let brands = {};
             let packSizes = new Set();
 
             rows.forEach(row => {
@@ -79,12 +74,14 @@ window.onload = function () {
                 const irradiationFilter = document.querySelector("[data-column='irradiation']").value;
                 const packSizeFilter = document.querySelector("[data-column='packSize']").value;
                 const gapFilter = document.querySelector("[data-column='gap']").value;
+                const searchFilter = document.querySelector("#search").value.toLowerCase();
 
                 tableBody.innerHTML = "";
 
                 stockData.forEach(stock => {
                     const brandLowerCase = stock.brand.trim().toLowerCase();
                     const brandFilterLowerCase = brandFilter.trim().toLowerCase();
+                    const matchesSearch = !searchFilter || stock.strain.toLowerCase().includes(searchFilter) || stock.brand.toLowerCase().includes(searchFilter);
 
                     if ((!stockAvailabilityFilter || stock.stockAvailability.trim() === stockAvailabilityFilter.trim()) &&
                         (!brandFilter || brandLowerCase === brandFilterLowerCase) && 
@@ -92,10 +89,10 @@ window.onload = function () {
                         (!cbdFilter || filterCBD(stock.cbd, cbdFilter)) &&
                         (!irradiationFilter || filterIrradiation(stock.irradiation, irradiationFilter)) &&
                         (!packSizeFilter || stock.packSize.trim() === packSizeFilter.trim()) &&
-                        (!gapFilter || stock.gap === gapFilter)) {
+                        (!gapFilter || stock.gap === gapFilter) &&
+                        matchesSearch) {
 
                         let stockAvailabilityClass = "";
-
                         switch (stock.stockAvailability.trim()) {
                             case "In Stock":
                                 stockAvailabilityClass = "inStock";
@@ -112,18 +109,18 @@ window.onload = function () {
                         }
 
                         let row = `<tr>
-                        <td class="status-cell ${stockAvailabilityClass}">${stock.stockAvailability}</td>
-                        <td>${stock.brand}</td>
-                        <td>${stock.thc}</td>
-                        <td>${stock.cbd}</td>
-                        <td>${stock.strain}</td>
-                        <td>${stock.packSize}</td>
-                        <td>${stock.sativaIndica}</td>
-                        <td>${stock.irradiation}</td>
-                        <td>${stock.pricePG}</td>
-                        <td>${stock.gapPricePG}</td>
-                        <td>${stock.t21PricePG}</td>
-                    </tr>`;
+                            <td class="status-cell ${stockAvailabilityClass}">${stock.stockAvailability}</td>
+                            <td>${stock.brand}</td>
+                            <td>${stock.thc}</td>
+                            <td>${stock.cbd}</td>
+                            <td>${stock.strain}</td>
+                            <td>${stock.packSize}</td>
+                            <td>${stock.sativaIndica}</td>
+                            <td>${stock.irradiation}</td>
+                            <td>${stock.pricePG}</td>
+                            <td>${stock.gapPricePG}</td>
+                            <td>${stock.t21PricePG}</td>
+                        </tr>`;
 
                         tableBody.innerHTML += row;
                     }
@@ -158,8 +155,9 @@ window.onload = function () {
                 return true;
             }
 
-            document.querySelectorAll(".filter").forEach(select => {
-                select.addEventListener("change", renderTable);
+            document.querySelectorAll(".filter").forEach(element => {
+                element.addEventListener("change", renderTable);
+                element.addEventListener("input", renderTable);
             });
 
             renderTable();
