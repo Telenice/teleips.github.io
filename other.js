@@ -16,7 +16,7 @@ window.onload = function () {
 
     document.getElementById("modeToggle").addEventListener("click", toggleMode);
 
-    const sheetID = "15sxwI1IGcYTz-SC9bY0dO2ipEUGVW-_O";
+    const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
     const sheetName = "Vapes, Pastilles and Capsules";
     const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
 
