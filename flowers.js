@@ -42,16 +42,15 @@ window.onload = function () {
                 const irradiation = row.c[8]?.v || "Unknown";
                 const pricePG = row.c[9]?.v || "Unknown";
                 const gapPricePG = row.c[10]?.v || "Unknown";
-                const t21PricePG = row.c[11]?.v || "Unknown";
 
-                if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG, gapPricePG, t21PricePG].includes("Unknown")) {
+                if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG, gapPricePG].includes("Unknown")) {
                     return;
                 }
 
                 const gap = (parseFloat(pricePG) !== parseFloat(gapPricePG)) ? "Yes" : "No";
 
                 stockData.push({
-                    stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, irradiation, pricePG, gapPricePG, t21PricePG, gap
+                    stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, irradiation, pricePG, gapPricePG, gap
                 });
 
                 if (brand && brand !== "Unknown") {
@@ -119,7 +118,6 @@ window.onload = function () {
                             <td>${stock.irradiation}</td>
                             <td>${stock.pricePG}</td>
                             <td>${stock.gapPricePG}</td>
-                            <td>${stock.t21PricePG}</td>
                         </tr>`;
 
                         tableBody.innerHTML += row;
