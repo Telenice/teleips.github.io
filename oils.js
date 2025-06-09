@@ -18,7 +18,6 @@ window.onload = function () {
 
     const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
     const sheetName = "Oils";
-    // FIX: Added encodeURIComponent for robust fetching
     const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
 
     fetch(url)
@@ -29,7 +28,6 @@ window.onload = function () {
             const tableBody = document.querySelector("#stockTable tbody");
 
             let stockData = [];
-            // NEW: Using a Set for simple, unique brand collection
             let brandSet = new Set();
             let packSizes = new Set();
 
@@ -54,7 +52,6 @@ window.onload = function () {
                     stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG, gapPricePG
                 });
 
-                // NEW: Simplified brand collection
                 if (brand && brand !== "Unknown") {
                     brandSet.add(brand);
                 }
@@ -64,7 +61,6 @@ window.onload = function () {
                 }
             });
             
-            // NEW: Sort the data by Brand, then by Strain
             stockData.sort((a, b) => {
                 const brandComparison = a.brand.localeCompare(b.brand);
                 if (brandComparison !== 0) return brandComparison;
@@ -82,7 +78,6 @@ window.onload = function () {
                 stockData.forEach(stock => {
                     const matchesSearch = !searchFilter || stock.strain.toLowerCase().includes(searchFilter) || stock.brand.toLowerCase().includes(searchFilter);
 
-                    // FIX: Simplified, direct comparison for brand filter
                     if ((!stockAvailabilityFilter || stock.stockAvailability.trim() === stockAvailabilityFilter.trim()) &&
                         (!brandFilter || stock.brand === brandFilter) &&
                         (!packSizeFilter || stock.packSize === packSizeFilter) &&
@@ -96,7 +91,6 @@ window.onload = function () {
                             case "Out Of Stock": stockAvailabilityClass = "outOfStock"; break;
                         }
 
-                        // FIX: Added <span> for status pill styling
                         let row = `<tr>
                             <td class="status-cell ${stockAvailabilityClass}"><span>${stock.stockAvailability}</span></td>
                             <td>${stock.brand}</td>
@@ -121,7 +115,6 @@ window.onload = function () {
 
             renderTable();
 
-            // NEW: Populate dropdown from the simple Set
             const brandDropdown = document.querySelector("#brand");
             [...brandSet].sort().forEach(brand => {
                 const option = document.createElement("option");

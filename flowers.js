@@ -17,20 +17,16 @@ window.onload = function () {
     document.getElementById("modeToggle").addEventListener("click", toggleMode);
 
     const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
-    // --- NEW: An array containing the names of both sheets to fetch ---
     const sheetNames = ["Flowers", "Flowers To Be Ordered"];
 
-    // --- NEW: Create an array of promises, one for each sheet fetch ---
     const fetchPromises = sheetNames.map(sheetName => {
         const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
         return fetch(url).then(response => response.text());
     });
 
-    // --- NEW: Use Promise.all to wait for all fetches to complete ---
     Promise.all(fetchPromises)
         .then(results => {
             let combinedRows = [];
-            // Process each result and combine the rows
             results.forEach(data => {
                 const json = JSON.parse(data.substring(47, data.length - 2));
                 if (json.table && json.table.rows) {
@@ -38,7 +34,6 @@ window.onload = function () {
                 }
             });
 
-            // --- The rest of the script now uses the combined data ---
             let stockData = [];
             let brands = {};
             let packSizes = new Set();
@@ -55,8 +50,6 @@ window.onload = function () {
                 const pricePG = row.c[9]?.v || "Unknown";
                 const gapPricePG = row.c[10]?.v || "Unknown";
                 
-                // --- MODIFIED: The check is relaxed to no longer require price data ---
-                // This will prevent "To be Ordered" items from being hidden if they lack a price.
                 if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica].includes("Unknown")) {
                     return;
                 }
@@ -79,20 +72,16 @@ window.onload = function () {
             }
         });
 
-        // --- NEW: Sort the combined data by Brand, then by Strain ---
         stockData.sort((a, b) => {
-            // First, compare by brand name
             const brandComparison = a.brand.localeCompare(b.brand);
             if (brandComparison !== 0) {
                 return brandComparison;
             }
-            // If brands are the same, compare by strain name
             return a.strain.localeCompare(b.strain);
         });
 
             function renderTable() {
-                // --- MODIFIED: Simplified the brand filter logic ---
-                const brandFilter = document.querySelector("[data-column='brand']").value; // This value is now lowercase
+                const brandFilter = document.querySelector("[data-column='brand']").value;
                 const stockAvailabilityFilter = document.querySelector("[data-column='stockAvailability']").value;
                 const thcFilter = document.querySelector("[data-column='thc']").value;
                 const cbdFilter = document.querySelector("[data-column='cbd']").value;
@@ -107,7 +96,6 @@ window.onload = function () {
                     const brandLowerCase = stock.brand.trim().toLowerCase();
                     const matchesSearch = !searchFilter || stock.strain.toLowerCase().includes(searchFilter) || stock.brand.toLowerCase().includes(searchFilter);
 
-                    // The brand comparison is now a direct, reliable check
                     if ((!stockAvailabilityFilter || stock.stockAvailability.trim() === stockAvailabilityFilter.trim()) &&
                         (!brandFilter || brandLowerCase === brandFilter) &&
                         (!thcFilter || filterTHC(stock.thc, thcFilter)) &&
@@ -189,10 +177,10 @@ window.onload = function () {
             renderTable();
 
             Object.keys(brands).sort().forEach(brandKey => {
-                const originalBrand = brands[brandKey]; // Get original-cased brand name
+                const originalBrand = brands[brandKey];
                 const option = document.createElement("option");
-                option.value = brandKey; // Use the lowercase key as the value
-                option.textContent = originalBrand; // Display the original name
+                option.value = brandKey;
+                option.textContent = originalBrand;
                 document.querySelector("#brand").appendChild(option);
             });
 
@@ -205,7 +193,6 @@ window.onload = function () {
         })
         .catch(error => {
             console.error("Failed to fetch or process sheet data:", error);
-            // Optionally, display an error message to the user on the page
             const tableBody = document.querySelector("#stockTable tbody");
             tableBody.innerHTML = `<tr><td colspan="11">Error: Could not load data from the spreadsheets. Please check the console for details.</td></tr>`;
         });

@@ -18,7 +18,6 @@ window.onload = function () {
 
     const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
     const sheetName = "Vapes, Pastilles and Capsules";
-    // FIX: Added encodeURIComponent for robust fetching (critical for this sheet name)
     const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
 
     fetch(url)
@@ -29,7 +28,6 @@ window.onload = function () {
             const tableBody = document.querySelector("#stockTable tbody");
 
             let stockData = [];
-            // NEW: Using a Set for simple, unique brand collection
             let brandSet = new Set();
             let packSizes = new Set();
 
@@ -40,7 +38,7 @@ window.onload = function () {
                 const brand = (row.c[2]?.v || "Unknown").trim();
                 const thc = parseFloat(row.c[3]?.v) || 0;
                 const cbd = row.c[4]?.v || "Unknown";
-                const strain = row.c[5]?.v || "Unknown"; // Represents "Full Spectrum/Isolate"
+                const strain = row.c[5]?.v || "Unknown";
                 const packSize = (row.c[6]?.v || "Unknown").toString().trim();
                 const sativaIndica = row.c[7]?.v || "Unknown";
                 const pricePG = row.c[9]?.v || "Unknown";
@@ -54,7 +52,6 @@ window.onload = function () {
                     stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG, gapPricePG
                 });
 
-                // NEW: Simplified brand collection
                 if (brand && brand !== "Unknown") {
                     brandSet.add(brand);
                 }
@@ -64,7 +61,6 @@ window.onload = function () {
                 }
             });
 
-            // NEW: Sort the data by Brand, then by Product Name (strain column)
             stockData.sort((a, b) => {
                 const brandComparison = a.brand.localeCompare(b.brand);
                 if (brandComparison !== 0) return brandComparison;
@@ -80,10 +76,8 @@ window.onload = function () {
                 tableBody.innerHTML = "";
 
                 stockData.forEach(stock => {
-                    // Note: 'strain' here refers to the product name like "Vape Cartridge" etc.
                     const matchesSearch = !searchFilter || stock.brand.toLowerCase().includes(searchFilter) || stock.strain.toLowerCase().includes(searchFilter);
 
-                    // FIX: Simplified, direct comparison for brand filter
                     if ((!stockAvailabilityFilter || stock.stockAvailability.trim() === stockAvailabilityFilter.trim()) &&
                         (!brandFilter || stock.brand === brandFilter) &&
                         (!packSizeFilter || stock.packSize === packSizeFilter) &&
@@ -97,7 +91,6 @@ window.onload = function () {
                             case "Out Of Stock": stockAvailabilityClass = "outOfStock"; break;
                         }
                         
-                        // FIX: Added <span> for status pill styling
                         let row = `<tr>
                             <td class="status-cell ${stockAvailabilityClass}"><span>${stock.stockAvailability}</span></td>
                             <td>${stock.brand}</td>
@@ -122,7 +115,6 @@ window.onload = function () {
 
             renderTable();
             
-            // NEW: Populate dropdown from the simple Set
             const brandDropdown = document.querySelector("#brand");
             [...brandSet].sort().forEach(brand => {
                 const option = document.createElement("option");
