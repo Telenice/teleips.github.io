@@ -18,7 +18,8 @@ window.onload = function () {
 
     const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
     const sheetName = "Vapes, Pastilles and Capsules";
-    const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+    // FIX: Added encodeURIComponent for robust fetching (critical for this sheet name)
+    const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
 
     fetch(url)
         .then(response => response.text())
@@ -28,15 +29,18 @@ window.onload = function () {
             const tableBody = document.querySelector("#stockTable tbody");
 
             let stockData = [];
-            let brands = {};
+            // NEW: Using a Set for simple, unique brand collection
+            let brandSet = new Set();
             let packSizes = new Set();
 
             rows.forEach(row => {
+                if (!row || !row.c) return;
+                
                 const stockAvailability = row.c[1]?.v || "Unknown";
-                const brand = row.c[2]?.v || "Unknown";
+                const brand = (row.c[2]?.v || "Unknown").trim();
                 const thc = parseFloat(row.c[3]?.v) || 0;
                 const cbd = row.c[4]?.v || "Unknown";
-                const strain = row.c[5]?.v || "Unknown";
+                const strain = row.c[5]?.v || "Unknown"; // Represents "Full Spectrum/Isolate"
                 const packSize = (row.c[6]?.v || "Unknown").toString().trim();
                 const sativaIndica = row.c[7]?.v || "Unknown";
                 const pricePG = row.c[9]?.v || "Unknown";
@@ -50,16 +54,21 @@ window.onload = function () {
                     stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG, gapPricePG
                 });
 
+                // NEW: Simplified brand collection
                 if (brand && brand !== "Unknown") {
-                    const brandLowerCase = brand.toLowerCase();
-                    if (!brands[brandLowerCase]) {
-                        brands[brandLowerCase] = brand;
-                    }
+                    brandSet.add(brand);
                 }
 
                 if (packSize && packSize !== "Unknown") {
                     packSizes.add(packSize);
                 }
+            });
+
+            // NEW: Sort the data by Brand, then by Product Name (strain column)
+            stockData.sort((a, b) => {
+                const brandComparison = a.brand.localeCompare(b.brand);
+                if (brandComparison !== 0) return brandComparison;
+                return a.strain.localeCompare(b.strain);
             });
 
             function renderTable() {
@@ -71,33 +80,26 @@ window.onload = function () {
                 tableBody.innerHTML = "";
 
                 stockData.forEach(stock => {
-                    const brandLowerCase = stock.brand.trim().toLowerCase();
-                    const brandFilterLowerCase = brandFilter.trim().toLowerCase();
+                    // Note: 'strain' here refers to the product name like "Vape Cartridge" etc.
                     const matchesSearch = !searchFilter || stock.brand.toLowerCase().includes(searchFilter) || stock.strain.toLowerCase().includes(searchFilter);
 
+                    // FIX: Simplified, direct comparison for brand filter
                     if ((!stockAvailabilityFilter || stock.stockAvailability.trim() === stockAvailabilityFilter.trim()) &&
-                        (!brandFilter || brandLowerCase === brandFilterLowerCase) && 
-                        (!packSizeFilter || stock.packSize.trim() === packSizeFilter.trim()) &&
+                        (!brandFilter || stock.brand === brandFilter) &&
+                        (!packSizeFilter || stock.packSize === packSizeFilter) &&
                         matchesSearch) {
 
                         let stockAvailabilityClass = "";
                         switch (stock.stockAvailability.trim()) {
-                            case "In Stock":
-                                stockAvailabilityClass = "inStock";
-                                break;
-                            case "Near to Expiry Date":
-                                stockAvailabilityClass = "nearExpiry";
-                                break;
-                            case "To be Ordered":
-                                stockAvailabilityClass = "toBeOrdered";
-                                break;
-                            case "Out Of Stock":
-                                stockAvailabilityClass = "outOfStock";
-                                break;
+                            case "In Stock": stockAvailabilityClass = "inStock"; break;
+                            case "Near to Expiry Date": stockAvailabilityClass = "nearExpiry"; break;
+                            case "To be Ordered": stockAvailabilityClass = "toBeOrdered"; break;
+                            case "Out Of Stock": stockAvailabilityClass = "outOfStock"; break;
                         }
-
+                        
+                        // FIX: Added <span> for status pill styling
                         let row = `<tr>
-                            <td class="status-cell ${stockAvailabilityClass}">${stock.stockAvailability}</td>
+                            <td class="status-cell ${stockAvailabilityClass}"><span>${stock.stockAvailability}</span></td>
                             <td>${stock.brand}</td>
                             <td>${stock.thc}</td>
                             <td>${stock.cbd}</td>
@@ -119,19 +121,22 @@ window.onload = function () {
             });
 
             renderTable();
-
-            Object.values(brands).forEach(brand => {
+            
+            // NEW: Populate dropdown from the simple Set
+            const brandDropdown = document.querySelector("#brand");
+            [...brandSet].sort().forEach(brand => {
                 const option = document.createElement("option");
                 option.value = brand;
                 option.textContent = brand;
-                document.querySelector("#brand").appendChild(option);
+                brandDropdown.appendChild(option);
             });
 
-            packSizes.forEach(packSize => {
+            const packSizeDropdown = document.querySelector("#packSize");
+            [...packSizes].sort().forEach(packSize => {
                 const option = document.createElement("option");
                 option.value = packSize;
                 option.textContent = packSize;
-                document.querySelector("#packSize").appendChild(option);
+                packSizeDropdown.appendChild(option);
             });
         });
 };

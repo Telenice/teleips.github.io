@@ -17,21 +17,33 @@ window.onload = function () {
     document.getElementById("modeToggle").addEventListener("click", toggleMode);
 
     const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
-    const sheetName = "Flowers";
-    const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
-    
-    fetch(url)
-        .then(response => response.text())
-        .then(data => {
-            const json = JSON.parse(data.substring(47, data.length - 2));
-            const rows = json.table.rows;
-            const tableBody = document.querySelector("#stockTable tbody");
+    // --- NEW: An array containing the names of both sheets to fetch ---
+    const sheetNames = ["Flowers", "Flowers To Be Ordered"];
 
+    // --- NEW: Create an array of promises, one for each sheet fetch ---
+    const fetchPromises = sheetNames.map(sheetName => {
+        const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+        return fetch(url).then(response => response.text());
+    });
+
+    // --- NEW: Use Promise.all to wait for all fetches to complete ---
+    Promise.all(fetchPromises)
+        .then(results => {
+            let combinedRows = [];
+            // Process each result and combine the rows
+            results.forEach(data => {
+                const json = JSON.parse(data.substring(47, data.length - 2));
+                if (json.table && json.table.rows) {
+                    combinedRows = combinedRows.concat(json.table.rows);
+                }
+            });
+
+            // --- The rest of the script now uses the combined data ---
             let stockData = [];
             let brands = {};
             let packSizes = new Set();
 
-            rows.forEach(row => {
+            combinedRows.forEach(row => {
                 const stockAvailability = row.c[1]?.v || "Unknown";
                 const brand = row.c[2]?.v || "Unknown";
                 const thc = parseFloat(row.c[3]?.v) || 0;
@@ -42,8 +54,10 @@ window.onload = function () {
                 const irradiation = row.c[8]?.v || "Unknown";
                 const pricePG = row.c[9]?.v || "Unknown";
                 const gapPricePG = row.c[10]?.v || "Unknown";
-
-                if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG, gapPricePG].includes("Unknown")) {
+                
+                // --- MODIFIED: The check is relaxed to no longer require price data ---
+                // This will prevent "To be Ordered" items from being hidden if they lack a price.
+                if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica].includes("Unknown")) {
                     return;
                 }
 
@@ -53,21 +67,33 @@ window.onload = function () {
                     stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, irradiation, pricePG, gapPricePG, gap
                 });
 
-                if (brand && brand !== "Unknown") {
-                    const brandLowerCase = brand.toLowerCase();
-                    if (!brands[brandLowerCase]) {
-                        brands[brandLowerCase] = brand;
-                    }
-                }
+            if (brand && brand !== "Unknown") {
+            const brandLowerCase = brand.toLowerCase();
+            if (!brands[brandLowerCase]) {
+            brands[brandLowerCase] = brand;
+    }
+}
 
-                if (packSize && packSize !== "Unknown") {
-                    packSizes.add(packSize);
-                }
-            });
+            if (packSize && packSize !== "Unknown") {
+                packSizes.add(packSize);
+            }
+        });
+
+        // --- NEW: Sort the combined data by Brand, then by Strain ---
+        stockData.sort((a, b) => {
+            // First, compare by brand name
+            const brandComparison = a.brand.localeCompare(b.brand);
+            if (brandComparison !== 0) {
+                return brandComparison;
+            }
+            // If brands are the same, compare by strain name
+            return a.strain.localeCompare(b.strain);
+        });
 
             function renderTable() {
+                // --- MODIFIED: Simplified the brand filter logic ---
+                const brandFilter = document.querySelector("[data-column='brand']").value; // This value is now lowercase
                 const stockAvailabilityFilter = document.querySelector("[data-column='stockAvailability']").value;
-                const brandFilter = document.querySelector("[data-column='brand']").value;
                 const thcFilter = document.querySelector("[data-column='thc']").value;
                 const cbdFilter = document.querySelector("[data-column='cbd']").value;
                 const irradiationFilter = document.querySelector("[data-column='irradiation']").value;
@@ -79,11 +105,11 @@ window.onload = function () {
 
                 stockData.forEach(stock => {
                     const brandLowerCase = stock.brand.trim().toLowerCase();
-                    const brandFilterLowerCase = brandFilter.trim().toLowerCase();
                     const matchesSearch = !searchFilter || stock.strain.toLowerCase().includes(searchFilter) || stock.brand.toLowerCase().includes(searchFilter);
 
+                    // The brand comparison is now a direct, reliable check
                     if ((!stockAvailabilityFilter || stock.stockAvailability.trim() === stockAvailabilityFilter.trim()) &&
-                        (!brandFilter || brandLowerCase === brandFilterLowerCase) && 
+                        (!brandFilter || brandLowerCase === brandFilter) &&
                         (!thcFilter || filterTHC(stock.thc, thcFilter)) &&
                         (!cbdFilter || filterCBD(stock.cbd, cbdFilter)) &&
                         (!irradiationFilter || filterIrradiation(stock.irradiation, irradiationFilter)) &&
@@ -108,7 +134,7 @@ window.onload = function () {
                         }
 
                         let row = `<tr>
-                            <td class="status-cell ${stockAvailabilityClass}">${stock.stockAvailability}</td>
+                            <td class="status-cell ${stockAvailabilityClass}"><span>${stock.stockAvailability}</span></td>
                             <td>${stock.brand}</td>
                             <td>${stock.thc}</td>
                             <td>${stock.cbd}</td>
@@ -153,6 +179,8 @@ window.onload = function () {
                 return true;
             }
 
+            const tableBody = document.querySelector("#stockTable tbody");
+
             document.querySelectorAll(".filter").forEach(element => {
                 element.addEventListener("change", renderTable);
                 element.addEventListener("input", renderTable);
@@ -160,10 +188,11 @@ window.onload = function () {
 
             renderTable();
 
-            Object.values(brands).forEach(brand => {
+            Object.keys(brands).sort().forEach(brandKey => {
+                const originalBrand = brands[brandKey]; // Get original-cased brand name
                 const option = document.createElement("option");
-                option.value = brand;
-                option.textContent = brand;
+                option.value = brandKey; // Use the lowercase key as the value
+                option.textContent = originalBrand; // Display the original name
                 document.querySelector("#brand").appendChild(option);
             });
 
@@ -173,5 +202,11 @@ window.onload = function () {
                 option.textContent = packSize;
                 document.querySelector("#packSize").appendChild(option);
             });
+        })
+        .catch(error => {
+            console.error("Failed to fetch or process sheet data:", error);
+            // Optionally, display an error message to the user on the page
+            const tableBody = document.querySelector("#stockTable tbody");
+            tableBody.innerHTML = `<tr><td colspan="11">Error: Could not load data from the spreadsheets. Please check the console for details.</td></tr>`;
         });
 };
