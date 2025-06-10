@@ -83,6 +83,7 @@ window.onload = function () {
             function renderTable() {
                 const brandFilter = document.querySelector("[data-column='brand']").value;
                 const stockAvailabilityFilter = document.querySelector("[data-column='stockAvailability']").value;
+                const sativaIndicaFilter = document.querySelector("[data-column='sativaIndica']").value;
                 const thcFilter = document.querySelector("[data-column='thc']").value;
                 const cbdFilter = document.querySelector("[data-column='cbd']").value;
                 const irradiationFilter = document.querySelector("[data-column='irradiation']").value;
@@ -97,6 +98,7 @@ window.onload = function () {
                     const matchesSearch = !searchFilter || stock.strain.toLowerCase().includes(searchFilter) || stock.brand.toLowerCase().includes(searchFilter);
 
                     if ((!stockAvailabilityFilter || stock.stockAvailability.trim() === stockAvailabilityFilter.trim()) &&
+                        (!sativaIndicaFilter || filtersativaIndica(stock.sativaIndica, sativaIndicaFilter)) &&
                         (!brandFilter || brandLowerCase === brandFilter) &&
                         (!thcFilter || filterTHC(stock.thc, thcFilter)) &&
                         (!cbdFilter || filterCBD(stock.cbd, cbdFilter)) &&
@@ -139,12 +141,29 @@ window.onload = function () {
                 });
             }
 
+            function filtersativaIndica(sativaIndica, filter) {
+                const isSativa = /sativa|sative/i.test(sativaIndica);
+                const isIndica = /indica/i.test(sativaIndica);
+                const isHybrid = /hybrid/i.test(sativaIndica);
+
+                switch (filter) {
+                    case "Sativa":
+                        return isSativa;
+                    case "Indica":
+                        return isIndica;
+                    case "Hybrid":
+                        return isHybrid && !isIndica && !isSativa;
+                    default:
+                        return true;
+                }
+            }
+
             function filterTHC(thc, filter) {
                 if (filter === "") return true;
                 return filter === "0-10" && thc <= 10 ||
-                    filter === "10-20" && thc > 10 && thc <= 20 ||
-                    filter === "20-30" && thc > 20 && thc <= 30 ||
-                    filter === "30+" && thc > 30;
+                    filter === "10-20" && thc >= 10 && thc <= 20 ||
+                    filter === "20-30" && thc >= 20 && thc <= 30 ||
+                    filter === "30+" && thc >= 30;
             }
 
             function filterCBD(cbd, filter) {

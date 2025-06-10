@@ -69,6 +69,7 @@ window.onload = function () {
 
             function renderTable() {
                 const stockAvailabilityFilter = document.querySelector("[data-column='stockAvailability']").value;
+                const sativaIndicaFilter = document.querySelector("[data-column='sativaIndica']").value;
                 const brandFilter = document.querySelector("[data-column='brand']").value;
                 const packSizeFilter = document.querySelector("[data-column='packSize']").value;
                 const searchFilter = document.querySelector("#search").value.toLowerCase();
@@ -79,6 +80,7 @@ window.onload = function () {
                     const matchesSearch = !searchFilter || stock.strain.toLowerCase().includes(searchFilter) || stock.brand.toLowerCase().includes(searchFilter);
 
                     if ((!stockAvailabilityFilter || stock.stockAvailability.trim() === stockAvailabilityFilter.trim()) &&
+                        (!sativaIndicaFilter || filtersativaIndica(stock.sativaIndica, sativaIndicaFilter)) &&
                         (!brandFilter || stock.brand === brandFilter) &&
                         (!packSizeFilter || stock.packSize === packSizeFilter) &&
                         matchesSearch) {
@@ -106,6 +108,23 @@ window.onload = function () {
                         tableBody.innerHTML += row;
                     }
                 });
+            }
+
+            function filtersativaIndica(sativaIndica, filter) {
+                const isSativa = /sativa|sative/i.test(sativaIndica);
+                const isIndica = /indica/i.test(sativaIndica);
+                const isHybrid = /hybrid/i.test(sativaIndica);
+
+                switch (filter) {
+                    case "Sativa":
+                        return isSativa;
+                    case "Indica":
+                        return isIndica;
+                    case "Hybrid":
+                        return isHybrid && !isIndica && !isSativa;
+                    default:
+                        return true;
+                }
             }
 
             document.querySelectorAll(".filter").forEach(element => {
