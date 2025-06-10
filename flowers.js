@@ -26,59 +26,69 @@ window.onload = function () {
 
     Promise.all(fetchPromises)
         .then(results => {
-            let combinedRows = [];
-            results.forEach(data => {
-                const json = JSON.parse(data.substring(47, data.length - 2));
-                if (json.table && json.table.rows) {
-                    combinedRows = combinedRows.concat(json.table.rows);
-                }
-            });
-
-            let stockData = [];
             let brands = {};
             let packSizes = new Set();
 
-            combinedRows.forEach(row => {
-                const stockAvailability = row.c[1]?.v || "Unknown";
-                const brand = row.c[2]?.v || "Unknown";
-                const thc = parseFloat(row.c[3]?.v) || 0;
-                const cbd = row.c[4]?.v || "Unknown";
-                const strain = row.c[5]?.v || "Unknown";
-                const packSize = (row.c[6]?.v || "Unknown").toString().trim();
-                const sativaIndica = row.c[7]?.v || "Unknown";
-                const irradiation = row.c[8]?.v || "Unknown";
-                const pricePG = row.c[9]?.v || "Unknown";
-                const gapPricePG = row.c[10]?.v || "Unknown";
-                
-                if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica].includes("Unknown")) {
-                    return;
-                }
+            const parseSheetData = (rows) => {
+                let parsedData = [];
+                if (!rows) return parsedData;
 
-                const gap = (parseFloat(pricePG) !== parseFloat(gapPricePG)) ? "Yes" : "No";
+                rows.forEach(row => {
+                    const stockAvailability = row.c[1]?.v || "Unknown";
+                    const brand = row.c[2]?.v || "Unknown";
+                    const thc = parseFloat(row.c[3]?.v) || 0;
+                    const cbd = row.c[4]?.v || "Unknown";
+                    const strain = row.c[5]?.v || "Unknown";
+                    const packSize = (row.c[6]?.v || "Unknown").toString().trim();
+                    const sativaIndica = row.c[7]?.v || "Unknown";
+                    const irradiation = row.c[8]?.v || "Unknown";
+                    const pricePG = row.c[9]?.v || "Unknown";
+                    const gapPricePG = row.c[10]?.v || "Unknown";
+                    
+                    if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica].includes("Unknown")) {
+                        return;
+                    }
 
-                stockData.push({
-                    stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, irradiation, pricePG, gapPricePG, gap
+                    const gap = (parseFloat(pricePG) !== parseFloat(gapPricePG)) ? "Yes" : "No";
+
+                    const stockItem = {
+                        stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, irradiation, pricePG, gapPricePG, gap
+                    };
+                    parsedData.push(stockItem);
+
+                    if (brand && brand !== "Unknown") {
+                        const brandLowerCase = brand.toLowerCase();
+                        if (!brands[brandLowerCase]) {
+                            brands[brandLowerCase] = brand;
+                        }
+                    }
+
+                    if (packSize && packSize !== "Unknown") {
+                        packSizes.add(packSize);
+                    }
                 });
+                return parsedData;
+            };
 
-            if (brand && brand !== "Unknown") {
-            const brandLowerCase = brand.toLowerCase();
-            if (!brands[brandLowerCase]) {
-            brands[brandLowerCase] = brand;
-    }
-}
+            const jsonFlowers = JSON.parse(results[0].substring(47, results[0].length - 2));
+            const jsonToBeOrdered = JSON.parse(results[1].substring(47, results[1].length - 2));
 
-            if (packSize && packSize !== "Unknown") {
-                packSizes.add(packSize);
-            }
-        });
+            let flowersData = parseSheetData(jsonFlowers.table?.rows);
+            const toBeOrderedData = parseSheetData(jsonToBeOrdered.table?.rows);
 
-        stockData.sort((a, b) => {
-            const brandComparison = a.brand.localeCompare(b.brand);
-            if (brandComparison !== 0) {
-                return brandComparison;
-            }
-            return a.strain.localeCompare(b.strain);
-        });
+            toBeOrderedData.forEach(itemToInsert => {
+                const brandToFind = itemToInsert.brand;
+                
+                const lastIndex = flowersData.map(item => item.brand).lastIndexOf(brandToFind);
+
+                if (lastIndex !== -1) {
+                    flowersData.splice(lastIndex + 1, 0, itemToInsert);
+                } else {
+                    flowersData.push(itemToInsert);
+                }
+            });
+
+            const stockData = flowersData;
 
             function renderTable() {
                 const brandFilter = document.querySelector("[data-column='brand']").value;
