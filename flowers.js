@@ -179,7 +179,7 @@ window.onload = function () {
             function filterCBD(cbd, filter) {
                 if (filter === "") return true;
                 if (filter === "<1") {
-                    return (cbd === "<1" && cbd === "1");
+                    return (cbd === "<1" || cbd === "1" || cbd === "<0.5");
                 } else if (filter === "Balanced") {
                     return (cbd !== "<1" && cbd !== "<0.5" && cbd !== "1");
                 }
