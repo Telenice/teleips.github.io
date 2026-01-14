@@ -31,6 +31,7 @@ window.onload = function () {
             let brandSet = new Set();
             let packSizes = new Set();
 
+
             rows.forEach(row => {
                 if (!row || !row.c) return;
                 
@@ -65,6 +66,54 @@ window.onload = function () {
                 const brandComparison = a.brand.localeCompare(b.brand);
                 if (brandComparison !== 0) return brandComparison;
                 return a.strain.localeCompare(b.strain);
+            });
+
+            let currentSortColumn = null;
+            let currentSortDirection = 'asc';
+
+            function sortData(column) {
+                if (currentSortColumn === column) {
+                    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSortColumn = column;
+                    currentSortDirection = 'asc';
+                }
+
+                document.querySelectorAll('th.sortable').forEach(th => {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                    if (th.dataset.sort === column) {
+                        th.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                    }
+                });
+
+                const parseVal = (val) => {
+                    if (!val) return 0;
+                    const cleanVal = val.toString().replace(/[^\d.-]/g, ''); 
+                    const num = parseFloat(cleanVal);
+                    return isNaN(num) ? 0 : num;
+                };
+
+                stockData.sort((a, b) => {
+                    let valA = a[column];
+                    let valB = b[column];
+
+                    if (['pricePG', 'gapPricePG'].includes(column)) {
+                        valA = parseVal(valA);
+                        valB = parseVal(valB);
+                    }
+
+                    if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
+                    if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+
+                renderTable();
+            }
+
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    sortData(th.dataset.sort);
+                });
             });
 
             function renderTable() {
