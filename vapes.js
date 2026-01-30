@@ -22,7 +22,7 @@ window.onload = function () {
     let currentSortDirection = 'asc';
 
     function normalizeNA(val) {
-        if (!val) return "N/A";
+        if (val === null || val === undefined || val === "") return "N/A";
         const clean = val.toString().trim().toLowerCase();
         if (clean === "noapplicable" || clean === "not applicable" || clean === "n/a" || clean === "unknown") {
             return "N/A";
