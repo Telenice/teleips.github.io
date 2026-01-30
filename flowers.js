@@ -105,7 +105,7 @@ window.onload = function () {
 
             function renderTable() {
                 if (!tableBody) return;
-                
+
                 const filters = {
                     brand: document.querySelector("[data-column='brand']")?.value,
                     stock: document.querySelector("[data-column='stockAvailability']")?.value,
@@ -116,24 +116,35 @@ window.onload = function () {
                 tableBody.innerHTML = "";
 
                 stockData.forEach(stock => {
-                    const matchesSearch = !filters.search || 
-                                        stock.strain.toLowerCase().includes(filters.search) || 
-                                        stock.brand.toLowerCase().includes(filters.search);
+                    const matchesSearch = !filters.search ||
+                        stock.strain.toLowerCase().includes(filters.search) ||
+                        stock.brand.toLowerCase().includes(filters.search);
 
-                    if (matchesSearch) {
-                        let statusClass = stock.stockAvailability === "In Stock" ? "inStock" : "outOfStock";
+                    const matchesBrand = !filters.brand || stock.brand.toLowerCase() === filters.brand.toLowerCase();
+                    const matchesStock = !filters.stock || stock.stockAvailability === filters.stock;
+
+                    const matchesType = !filters.type || filtersativaIndica(stock.sativaIndica, filters.type);
+
+                    if (matchesSearch && matchesBrand && matchesStock && matchesType) {
+
+                        let statusClass = "outOfStock";
+                        const availability = stock.stockAvailability.trim();
+                        if (availability === "In Stock") statusClass = "inStock";
+                        else if (availability === "To be Ordered") statusClass = "toBeOrdered";
+                        else if (availability === "Near to Expiry Date") statusClass = "nearExpiry";
+
                         let row = `<tr>
-                            <td class="status-cell ${statusClass}"><span>${stock.stockAvailability}</span></td>
-                            <td>${stock.brand}</td>
-                            <td>${stock.thc}</td>
-                            <td>${stock.cbd}</td>
-                            <td>${stock.strain}</td>
-                            <td>${stock.packSize}</td>
-                            <td>${stock.sativaIndica}</td>
-                            <td>${stock.irradiation}</td>
-                            <td>${stock.pricePG}</td>
-                            <td>${stock.gapPricePG}</td>
-                        </tr>`;
+                <td class="status-cell ${statusClass}"><span>${stock.stockAvailability}</span></td>
+                <td>${stock.brand}</td>
+                <td>${stock.thc}</td>
+                <td>${stock.cbd}</td>
+                <td>${stock.strain}</td>
+                <td>${stock.packSize}</td>
+                <td>${stock.sativaIndica}</td>
+                <td>${stock.irradiation}</td>
+                <td>${stock.pricePG}</td>
+                <td>${stock.gapPricePG}</td>
+            </tr>`;
                         tableBody.innerHTML += row;
                     }
                 });
