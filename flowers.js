@@ -7,29 +7,19 @@ function toggleMode() {
 window.onload = function () {
     const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const modeToggle = document.getElementById("modeToggle");
-    
     if (prefersDarkScheme) {
         document.body.classList.add("dark-mode");
-        if(modeToggle) modeToggle.textContent = "☀️";
+        if (modeToggle) modeToggle.textContent = "☀️";
     }
-    if(modeToggle) modeToggle.addEventListener("click", toggleMode);
+    if (modeToggle) modeToggle.addEventListener("click", toggleMode);
 
     const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
     const sheetNames = ["Flowers", "Flowers To Be Ordered"];
-    const PROXY_URL = "https://proxy.tele-b8d.workers.dev/"; 
+    const PROXY_URL = "https://proxy.tele-b8d.workers.dev/";
 
     let allStockData = [];
     let currentSortColumn = null;
     let currentSortDirection = 'asc';
-
-    const fetchPromises = sheetNames.map(sheetName => {
-        const googleUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-        return fetch(PROXY_URL + "?url=" + encodeURIComponent(googleUrl))
-            .then(response => {
-                if (!response.ok) throw new Error();
-                return response.text();
-            });
-    });
 
     function filterSativaIndica(val, filter) {
         if (!filter) return true;
@@ -62,6 +52,57 @@ window.onload = function () {
         if (!filter) return true;
         const isNon = val.toLowerCase().includes("non");
         return filter === "Yes" ? !isNon : isNon;
+    }
+
+    function renderTable() {
+        const tableBody = document.querySelector("#stockTable tbody");
+        if (!tableBody) return;
+
+        const f = {
+            search: document.getElementById("search")?.value.toLowerCase() || "",
+            stock: document.getElementById("stockAvailability")?.value || "",
+            brand: document.getElementById("brand")?.value || "",
+            type: document.getElementById("sativaIndica")?.value || "",
+            thc: document.getElementById("thc")?.value || "",
+            cbd: document.getElementById("cbd")?.value || "",
+            irradiation: document.getElementById("irradiation")?.value || "",
+            pack: document.getElementById("packSize")?.value || "",
+            gap: document.getElementById("gap")?.value || ""
+        };
+
+        tableBody.innerHTML = "";
+        allStockData.forEach(s => {
+            const matchesSearch = !f.search || s.strain.toLowerCase().includes(f.search) || s.brand.toLowerCase().includes(f.search);
+            const matchesStock = !f.stock || s.stockAvailability === f.stock;
+            const matchesBrand = !f.brand || s.brand.toLowerCase() === f.brand.toLowerCase();
+            const matchesPack = !f.pack || s.packSize === f.pack;
+            const matchesGap = !f.gap || s.gap === f.gap;
+            const matchesTHC = filterTHC(s.thc, f.thc);
+            const matchesCBD = filterCBD(s.cbd, f.cbd);
+            const matchesType = filterSativaIndica(s.sativaIndica, f.type);
+            const matchesIrradiation = filterIrradiation(s.irradiation, f.irradiation);
+
+            if (matchesSearch && matchesStock && matchesBrand && matchesPack && matchesGap && matchesTHC && matchesCBD && matchesType && matchesIrradiation) {
+                let statusClass = "outOfStock";
+                const availability = s.stockAvailability;
+                if (availability === "In Stock") statusClass = "inStock";
+                else if (availability === "To be Ordered") statusClass = "toBeOrdered";
+                else if (availability === "Near to Expiry Date") statusClass = "nearExpiry";
+
+                tableBody.innerHTML += `<tr>
+                    <td class="status-cell ${statusClass}"><span>${s.stockAvailability}</span></td>
+                    <td>${s.brand}</td>
+                    <td>${s.thc}</td>
+                    <td>${s.cbd}</td>
+                    <td>${s.strain}</td>
+                    <td>${s.packSize}</td>
+                    <td>${s.sativaIndica}</td>
+                    <td>${s.irradiation}</td>
+                    <td>${s.pricePG}</td>
+                    <td>${s.gapPricePG}</td>
+                </tr>`;
+            }
+        });
     }
 
     function sortData(column) {
@@ -102,6 +143,15 @@ window.onload = function () {
         renderTable();
     }
 
+    const fetchPromises = sheetNames.map(sheetName => {
+        const googleUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+        return fetch(PROXY_URL + "?url=" + encodeURIComponent(googleUrl))
+            .then(response => {
+                if (!response.ok) throw new Error();
+                return response.text();
+            });
+    });
+
     Promise.all(fetchPromises)
         .then(results => {
             let brands = {};
@@ -110,14 +160,12 @@ window.onload = function () {
             const extractJSON = (text) => {
                 const start = text.indexOf('{');
                 const end = text.lastIndexOf('}');
-                if (start === -1) throw new Error();
                 return JSON.parse(text.substring(start, end + 1));
             };
 
             const parseSheetData = (rows) => {
                 let parsedData = [];
                 if (!rows) return parsedData;
-
                 rows.forEach(row => {
                     if (!row.c || row.c.length < 3) return;
                     const availText = (row.c[1]?.v || "").toString().trim();
@@ -138,10 +186,10 @@ window.onload = function () {
                         gap: (row.c[9]?.v !== row.c[10]?.v) ? "Yes" : "No"
                     };
 
-                    if (item.brand && item.brand !== "Unknown" && item.brand !== "") {
+                    if (item.brand && item.brand !== "Unknown") {
                         parsedData.push(item);
                         brands[item.brand.toLowerCase()] = item.brand;
-                        if(item.packSize && item.packSize !== "") packSizes.add(item.packSize);
+                        if (item.packSize) packSizes.add(item.packSize);
                     }
                 });
                 return parsedData;
@@ -150,56 +198,6 @@ window.onload = function () {
             const flowersData = parseSheetData(extractJSON(results[0]).table.rows);
             const toOrderData = parseSheetData(extractJSON(results[1]).table.rows);
             allStockData = flowersData.concat(toOrderData);
-
-            const tableBody = document.querySelector("#stockTable tbody");
-
-            function renderTable() {
-                if (!tableBody) return;
-                const f = {
-                    search: document.getElementById("search")?.value.toLowerCase() || "",
-                    stock: document.getElementById("stockAvailability")?.value || "",
-                    brand: document.getElementById("brand")?.value || "",
-                    type: document.getElementById("sativaIndica")?.value || "",
-                    thc: document.getElementById("thc")?.value || "",
-                    cbd: document.getElementById("cbd")?.value || "",
-                    irradiation: document.getElementById("irradiation")?.value || "",
-                    pack: document.getElementById("packSize")?.value || "",
-                    gap: document.getElementById("gap")?.value || ""
-                };
-
-                tableBody.innerHTML = "";
-                allStockData.forEach(s => {
-                    const matchesSearch = !f.search || s.strain.toLowerCase().includes(f.search) || s.brand.toLowerCase().includes(f.search);
-                    const matchesStock = !f.stock || s.stockAvailability === f.stock;
-                    const matchesBrand = !f.brand || s.brand.toLowerCase() === f.brand.toLowerCase();
-                    const matchesPack = !f.pack || s.packSize === f.pack;
-                    const matchesGap = !f.gap || s.gap === f.gap;
-                    const matchesTHC = filterTHC(s.thc, f.thc);
-                    const matchesCBD = filterCBD(s.cbd, f.cbd);
-                    const matchesType = filterSativaIndica(s.sativaIndica, f.type);
-                    const matchesIrradiation = filterIrradiation(s.irradiation, f.irradiation);
-
-                    if (matchesSearch && matchesStock && matchesBrand && matchesPack && matchesGap && matchesTHC && matchesCBD && matchesType && matchesIrradiation) {
-                        let statusClass = "outOfStock";
-                        if (s.stockAvailability === "In Stock") statusClass = "inStock";
-                        else if (s.stockAvailability === "To be Ordered") statusClass = "toBeOrdered";
-                        else if (s.stockAvailability === "Near to Expiry Date") statusClass = "nearExpiry";
-
-                        tableBody.innerHTML += `<tr>
-                            <td class="status-cell ${statusClass}"><span>${s.stockAvailability}</span></td>
-                            <td>${s.brand}</td>
-                            <td>${s.thc}</td>
-                            <td>${s.cbd}</td>
-                            <td>${s.strain}</td>
-                            <td>${s.packSize}</td>
-                            <td>${s.sativaIndica}</td>
-                            <td>${s.irradiation}</td>
-                            <td>${s.pricePG}</td>
-                            <td>${s.gapPricePG}</td>
-                        </tr>`;
-                    }
-                });
-            }
 
             document.querySelectorAll(".filter").forEach(el => {
                 el.addEventListener("input", renderTable);
@@ -219,7 +217,7 @@ window.onload = function () {
 
             const packSelect = document.getElementById("packSize");
             if (packSelect) {
-                Array.from(packSizes).sort((a,b) => parseFloat(a) - parseFloat(b)).forEach(p => {
+                Array.from(packSizes).sort((a, b) => parseFloat(a) - parseFloat(b)).forEach(p => {
                     packSelect.add(new Option(p, p));
                 });
             }
@@ -228,6 +226,6 @@ window.onload = function () {
         })
         .catch(err => {
             const tableBody = document.querySelector("#stockTable tbody");
-            if(tableBody) tableBody.innerHTML = `<tr><td colspan="10">Error loading data.</td></tr>`;
+            if (tableBody) tableBody.innerHTML = `<tr><td colspan="10">Error loading data.</td></tr>`;
         });
 };
