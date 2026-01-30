@@ -1,166 +1,202 @@
 function toggleMode() {
-    const body = document.body;
-    body.classList.toggle("dark-mode");
-    const isDark = body.classList.contains("dark-mode");
-    
+    document.body.classList.toggle("dark-mode");
     const modeToggle = document.getElementById("modeToggle");
-    if (modeToggle) modeToggle.textContent = isDark ? "☀️" : "🌙";
-
-    const safariMeta = document.getElementById("safari-theme");
-    if (safariMeta) {
-        safariMeta.setAttribute("content", isDark ? "#121212" : "#f8f9fa");
-    }
+    modeToggle.textContent = document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
 }
 
 window.onload = function () {
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const modeToggle = document.getElementById("modeToggle");
-    const safariMeta = document.getElementById("safari-theme");
-    
-    if (prefersDark) {
+    const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (prefersDarkScheme) {
         document.body.classList.add("dark-mode");
-        if (modeToggle) modeToggle.textContent = "☀️";
-        if (safariMeta) safariMeta.setAttribute("content", "#121212");
+        document.getElementById("modeToggle").textContent = "☀️";
+    } else {
+        document.body.classList.remove("dark-mode");
+        document.getElementById("modeToggle").textContent = "🌙";
     }
 
-    if (modeToggle) modeToggle.addEventListener("click", toggleMode);
+    document.getElementById("modeToggle").addEventListener("click", toggleMode);
 
     const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
     const sheetName = "Vapes, Pastilles and Capsules";
-    const PROXY_URL = "https://proxy.tele-b8d.workers.dev/";
+    const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
 
-    let allStockData = [];
-    let currentSortColumn = null;
-    let currentSortDirection = 'asc';
-
-    function normalizeNA(val) {
-        if (val === null || val === undefined || val === "") return "N/A";
-        const clean = val.toString().trim().toLowerCase();
-        if (clean === "noapplicable" || clean === "not applicable" || clean === "n/a" || clean === "unknown") {
-            return "N/A";
-        }
-        return val;
-    }
-
-    function filtersativaIndica(val, filter) {
-        if (!filter) return true;
-        const text = val.toLowerCase();
-        if (filter === "Sativa") return text.includes("sativa");
-        if (filter === "Indica") return text.includes("indica");
-        if (filter === "Hybrid") return text.includes("hybrid") && !text.includes("sativa") && !text.includes("indica");
-        return true;
-    }
-
-    function renderTable() {
-        const tableBody = document.querySelector("#stockTable tbody");
-        if (!tableBody) return;
-
-        const f = {
-            search: document.getElementById("search")?.value.toLowerCase() || "",
-            stock: document.getElementById("stockAvailability")?.value || "",
-            brand: document.getElementById("brand")?.value || "",
-            type: document.getElementById("sativaIndica")?.value || "",
-            pack: document.getElementById("packSize")?.value || ""
-        };
-
-        tableBody.innerHTML = "";
-        allStockData.forEach(s => {
-            const mSearch = !f.search || s.strain.toLowerCase().includes(f.search) || s.brand.toLowerCase().includes(f.search);
-            const mStock = !f.stock || s.stockAvailability === f.stock;
-            const mBrand = !f.brand || s.brand === f.brand;
-            const mPack = !f.pack || s.packSize === f.pack;
-            const mType = filtersativaIndica(s.sativaIndica, f.type);
-
-            if (mSearch && mStock && mBrand && mPack && mType) {
-                let sClass = "outOfStock";
-                if (s.stockAvailability === "In Stock") sClass = "inStock";
-                else if (s.stockAvailability === "To be Ordered") sClass = "toBeOrdered";
-                else if (s.stockAvailability === "Near to Expiry Date") sClass = "nearExpiry";
-
-                tableBody.innerHTML += `<tr>
-                    <td class="status-cell ${sClass}"><span>${s.stockAvailability}</span></td>
-                    <td>${normalizeNA(s.brand)}</td>
-                    <td>${normalizeNA(s.thc)}</td>
-                    <td>${normalizeNA(s.cbd)}</td>
-                    <td>${normalizeNA(s.strain)}</td>
-                    <td>${normalizeNA(s.packSize)}</td>
-                    <td>${normalizeNA(s.sativaIndica)}</td>
-                    <td>${normalizeNA(s.pricePG)}</td>
-                    <td>${normalizeNA(s.gapPricePG)}</td>
-                </tr>`;
-            }
-        });
-    }
-
-    function sortData(col) {
-        if (currentSortColumn === col) {
-            currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            currentSortColumn = col;
-            currentSortDirection = 'asc';
-        }
-
-        document.querySelectorAll('th.sortable').forEach(th => {
-            th.classList.remove('sort-asc', 'sort-desc');
-            if (th.dataset.sort === col) th.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
-        });
-
-        allStockData.sort((a, b) => {
-            let vA = a[col], vB = b[col];
-            if (['thc', 'pricePG', 'gapPricePG'].includes(col)) {
-                vA = parseFloat(vA.toString().replace(/[^\d.-]/g, '')) || 0;
-                vB = parseFloat(vB.toString().replace(/[^\d.-]/g, '')) || 0;
-            } else {
-                vA = vA.toString().toLowerCase(); vB = vB.toString().toLowerCase();
-            }
-            return currentSortDirection === 'asc' ? (vA < vB ? -1 : 1) : (vA > vB ? -1 : 1);
-        });
-        renderTable();
-    }
-
-    const googleUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-    fetch(PROXY_URL + "?url=" + encodeURIComponent(googleUrl))
-        .then(res => res.text())
+    fetch(url)
+        .then(response => response.text())
         .then(data => {
-            const extractJSON = (t) => JSON.parse(t.substring(t.indexOf('{'), t.lastIndexOf('}') + 1));
-            const json = extractJSON(data);
+            const json = JSON.parse(data.substring(47, data.length - 2));
             const rows = json.table.rows;
+            const tableBody = document.querySelector("#stockTable tbody");
 
+            let stockData = [];
             let brandSet = new Set();
-            let packSet = new Set();
+            let packSizes = new Set();
+
 
             rows.forEach(row => {
-                if (!row.c || row.c.length < 3) return;
-                const av = (row.c[1]?.v || "").toString().trim();
-                const br = (row.c[2]?.v || "").toString().trim();
-                if (br === "Brand" || av === "Stock Availability") return;
+                if (!row || !row.c) return;
+                
+                const stockAvailability = row.c[1]?.v || "Unknown";
+                const brand = (row.c[2]?.v || "Unknown").trim();
+                const thc = parseFloat(row.c[3]?.v) || 0;
+                const cbd = row.c[4]?.v || "Unknown";
+                const strain = row.c[5]?.v || "Unknown";
+                const packSize = (row.c[6]?.v || "Unknown").toString().trim();
+                const sativaIndica = row.c[7]?.v || "Unknown";
+                const pricePG = row.c[9]?.v || "Unknown";
+                const gapPricePG = row.c[10]?.v || "Unknown";
 
-                const item = {
-                    stockAvailability: av, brand: br, thc: row.c[3]?.v || 0, cbd: row.c[4]?.v || 0,
-                    strain: (row.c[5]?.v || "").toString().trim(), packSize: (row.c[6]?.v || "").toString().trim(),
-                    sativaIndica: row.c[7]?.v || "Unknown", pricePG: row.c[9]?.v || 0, gapPricePG: row.c[10]?.v || 0
+                if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG, gapPricePG].includes("Unknown")) {
+                    return;
+                }
+
+                stockData.push({
+                    stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG, gapPricePG
+                });
+
+                if (brand && brand !== "Unknown") {
+                    brandSet.add(brand);
+                }
+
+                if (packSize && packSize !== "Unknown") {
+                    packSizes.add(packSize);
+                }
+            });
+
+            stockData.sort((a, b) => {
+                const brandComparison = a.brand.localeCompare(b.brand);
+                if (brandComparison !== 0) return brandComparison;
+                return a.strain.localeCompare(b.strain);
+            });
+
+            let currentSortColumn = null;
+            let currentSortDirection = 'asc';
+
+            function sortData(column) {
+                if (currentSortColumn === column) {
+                    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSortColumn = column;
+                    currentSortDirection = 'asc';
+                }
+
+                document.querySelectorAll('th.sortable').forEach(th => {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                    if (th.dataset.sort === column) {
+                        th.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                    }
+                });
+
+                const parseVal = (val) => {
+                    if (!val) return 0;
+                    const cleanVal = val.toString().replace(/[^\d.-]/g, ''); 
+                    const num = parseFloat(cleanVal);
+                    return isNaN(num) ? 0 : num;
                 };
 
-                allStockData.push(item);
-                if (item.brand && normalizeNA(item.brand) !== "N/A") brandSet.add(item.brand);
-                if (item.packSize && normalizeNA(item.packSize) !== "N/A") packSet.add(item.packSize);
-            });
+                stockData.sort((a, b) => {
+                    let valA = a[column];
+                    let valB = b[column];
 
-            document.querySelectorAll(".filter").forEach(el => {
-                el.addEventListener("input", renderTable);
-                el.addEventListener("change", renderTable);
-            });
+                    if (['pricePG', 'gapPricePG'].includes(column)) {
+                        valA = parseVal(valA);
+                        valB = parseVal(valB);
+                    }
+
+                    if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
+                    if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
+                    return 0;
+                });
+
+                renderTable();
+            }
 
             document.querySelectorAll('th.sortable').forEach(th => {
-                th.addEventListener('click', () => sortData(th.dataset.sort));
+                th.addEventListener('click', () => {
+                    sortData(th.dataset.sort);
+                });
             });
 
-            const brandSelect = document.getElementById("brand");
-            [...brandSet].sort().forEach(b => brandSelect.add(new Option(b, b)));
+            function renderTable() {
+                const stockAvailabilityFilter = document.querySelector("[data-column='stockAvailability']").value;
+                const brandFilter = document.querySelector("[data-column='brand']").value;
+                const sativaIndicaFilter = document.querySelector("[data-column='sativaIndica']").value;
+                const packSizeFilter = document.querySelector("[data-column='packSize']").value;
+                const searchFilter = document.querySelector("#search").value.toLowerCase();
 
-            const packSelect = document.getElementById("packSize");
-            [...packSet].sort((a,b) => parseFloat(a) - parseFloat(b)).forEach(p => packSelect.add(new Option(p, p)));
+                tableBody.innerHTML = "";
+
+                stockData.forEach(stock => {
+                    const matchesSearch = !searchFilter || stock.brand.toLowerCase().includes(searchFilter) || stock.strain.toLowerCase().includes(searchFilter);
+
+                    if ((!stockAvailabilityFilter || stock.stockAvailability.trim() === stockAvailabilityFilter.trim()) &&
+                        (!sativaIndicaFilter || filtersativaIndica(stock.sativaIndica, sativaIndicaFilter)) &&
+                        (!brandFilter || stock.brand === brandFilter) &&
+                        (!packSizeFilter || stock.packSize === packSizeFilter) &&
+                        matchesSearch) {
+
+                        let stockAvailabilityClass = "";
+                        switch (stock.stockAvailability.trim()) {
+                            case "In Stock": stockAvailabilityClass = "inStock"; break;
+                            case "Near to Expiry Date": stockAvailabilityClass = "nearExpiry"; break;
+                            case "To be Ordered": stockAvailabilityClass = "toBeOrdered"; break;
+                            case "Out Of Stock": stockAvailabilityClass = "outOfStock"; break;
+                        }
+                        
+                        let row = `<tr>
+                            <td class="status-cell ${stockAvailabilityClass}"><span>${stock.stockAvailability}</span></td>
+                            <td>${stock.brand}</td>
+                            <td>${stock.thc}</td>
+                            <td>${stock.cbd}</td>
+                            <td>${stock.strain}</td>
+                            <td>${stock.packSize}</td>
+                            <td>${stock.sativaIndica}</td>
+                            <td>${stock.pricePG}</td>
+                            <td>${stock.gapPricePG}</td>
+                        </tr>`;
+
+                        tableBody.innerHTML += row;
+                    }
+                });
+            }
+
+            function filtersativaIndica(sativaIndica, filter) {
+                const isSativa = /sativa|sative/i.test(sativaIndica);
+                const isIndica = /indica/i.test(sativaIndica);
+                const isHybrid = /hybrid/i.test(sativaIndica);
+
+                switch (filter) {
+                    case "Sativa":
+                        return isSativa;
+                    case "Indica":
+                        return isIndica;
+                    case "Hybrid":
+                        return isHybrid && !isIndica && !isSativa;
+                    default:
+                        return true;
+                }
+            }
+
+            document.querySelectorAll(".filter").forEach(element => {
+                element.addEventListener("change", renderTable);
+                element.addEventListener("input", renderTable);
+            });
 
             renderTable();
+            
+            const brandDropdown = document.querySelector("#brand");
+            [...brandSet].sort().forEach(brand => {
+                const option = document.createElement("option");
+                option.value = brand;
+                option.textContent = brand;
+                brandDropdown.appendChild(option);
+            });
+
+            const packSizeDropdown = document.querySelector("#packSize");
+            [...packSizes].sort().forEach(packSize => {
+                const option = document.createElement("option");
+                option.value = packSize;
+                option.textContent = packSize;
+                packSizeDropdown.appendChild(option);
+            });
         });
 };
