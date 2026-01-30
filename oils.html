@@ -1,7 +1,6 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,10 +8,8 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
 </head>
-
 <body>
     <button class="mode-toggle" id="modeToggle">🌙</button>
     <h2><img src="https://app.integroclinics.com/img/logo.svg" alt="Stock Availability"></h2>
@@ -27,7 +24,7 @@
                 <option value="">Select Type</option>
                 <option value="index.html">Flowers</option>
                 <option value="oils.html" selected>Oils</option>
-                <option value="vapes.html">Vapes</option>
+                <option value="other.html">Other</option>
             </select>
         </div>
         <div>
@@ -48,12 +45,12 @@
         </div>
         <div>
             <label for="sativaIndica">Sativa/Indica:</label>
-            <select class="filter" data-column="sativaIndica" id="sativaIndica">
+            <select class="filter" data-column="sativaIndica" id ="sativaIndica">
                 <option value="">All</option>
                 <option value="Sativa">Sativa</option>
                 <option value="Hybrid">Hybrid</option>
                 <option value="Indica">Indica</option>
-            </select>
+                </select>
         </div>
         <div>
             <label for="packSize">Pack Size (ML):</label>
@@ -73,8 +70,8 @@
                     <th>Full Spectrum/Isolate</th>
                     <th>Pack Size (ML)</th>
                     <th>Sativa:Indica</th>
-                    <th class="sortable" data-sort="pricePG">Price P/G <span class="sort-icon"></span></th>
-                    <th class="sortable" data-sort="gapPricePG">GAP Price P/G <span class="sort-icon"></span></th>
+                    <th>Price P/G</th>
+                    <th>GAP Price P/G</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -82,5 +79,9 @@
     </div>
     <script src="oils.js"></script>
 </body>
+<<<<<<< HEAD
 
 </html>
+=======
+</html>
+>>>>>>> parent of fb5ebb2 (Added sorting logic)
