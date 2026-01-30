@@ -23,7 +23,6 @@ h2 img {
     max-width: 100%;
     width: 500px;
     height: auto;
-    border-radius: 50%;
 }
 
 .dark-mode {
@@ -159,7 +158,7 @@ td {
 }
 
 .dark-mode td {
-    background-color: #1e1e1e !important;
+    background-color: #1e1e1e;
     border-bottom: 1px solid #333;
 }
 
@@ -176,7 +175,7 @@ tr:hover td {
 }
 
 .dark-mode tr:hover td {
-    background-color: #2a2a2a !important;
+    background-color: #2a2a2a;
 }
 
 td {
@@ -192,17 +191,11 @@ td {
     overflow-wrap: break-word;
 }
 
-/* FIX: Ensure the first column doesn't have a unique background */
 .status-cell {
     text-align: center;
     vertical-align: middle;
     padding: 12px 8px !important;
-    background-color: #ffffff; /* Light mode default */
-}
-
-/* FIX: Dark mode override for the first column */
-.dark-mode .status-cell {
-    background-color: #1e1e1e !important;
+    background-color: transparent !important;
 }
 
 .status-cell span {
@@ -219,11 +212,10 @@ td {
     box-sizing: border-box;
 }
 
-/* Status Colors - ONLY ON SPAN */
-.inStock span { background-color: #6ff3b8; color: #1e6946; }
-.nearExpiry span { background-color: #fce084; color: #664d03; }
-.toBeOrdered span { background-color: #cfe2ff; color: #084298; }
-.outOfStock span { background-color: #f78787; color: #842029; }
+.inStock span { background-color: #1e6946; color: #ffffff; }
+.nearExpiry span { background-color: #664d03; color: #ffffff; }
+.toBeOrdered span { background-color: #084298; color: #ffffff; }
+.outOfStock span { background-color: #842029; color: #ffffff; }
 
 .dark-mode .inStock span { background-color: #0f5132; color: #d1e7dd; }
 .dark-mode .nearExpiry span { background-color: #664d03; color: #fff3cd; }
