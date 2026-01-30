@@ -21,15 +21,6 @@ window.onload = function () {
     let currentSortColumn = null;
     let currentSortDirection = 'asc';
 
-    function normalizeNA(val) {
-        if (val === null || val === undefined || val === "") return "N/A";
-        const clean = val.toString().trim().toLowerCase();
-        if (clean === "noapplicable" || clean === "not applicable" || clean === "n/a" || clean === "unknown") {
-            return "N/A";
-        }
-        return val;
-    }
-
     function filtersativaIndica(val, filter) {
         if (!filter) return true;
         const text = val.toLowerCase();
@@ -68,14 +59,14 @@ window.onload = function () {
 
                 tableBody.innerHTML += `<tr>
                     <td class="status-cell ${statusClass}"><span>${s.stockAvailability}</span></td>
-                    <td>${normalizeNA(s.brand)}</td>
-                    <td>${normalizeNA(s.thc)}</td>
-                    <td>${normalizeNA(s.cbd)}</td>
-                    <td>${normalizeNA(s.strain)}</td>
-                    <td>${normalizeNA(s.packSize)}</td>
-                    <td>${normalizeNA(s.sativaIndica)}</td>
-                    <td>${normalizeNA(s.pricePG)}</td>
-                    <td>${normalizeNA(s.gapPricePG)}</td>
+                    <td>${s.brand}</td>
+                    <td>${s.thc}</td>
+                    <td>${s.cbd}</td>
+                    <td>${s.strain}</td>
+                    <td>${s.packSize}</td>
+                    <td>${s.sativaIndica}</td>
+                    <td>${s.pricePG}</td>
+                    <td>${s.gapPricePG}</td>
                 </tr>`;
             }
         });
@@ -145,12 +136,10 @@ window.onload = function () {
                     gapPricePG: row.c[10]?.v || 0
                 };
 
-                allStockData.push(item);
-                if (item.brand && normalizeNA(item.brand) !== "N/A") {
+                if (item.brand && item.brand !== "Unknown") {
+                    allStockData.push(item);
                     brandSet.add(item.brand);
-                }
-                if (item.packSize && normalizeNA(item.packSize) !== "N/A") {
-                    packSet.add(item.packSize);
+                    if (item.packSize) packSet.add(item.packSize);
                 }
             });
 
