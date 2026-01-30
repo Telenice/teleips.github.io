@@ -20,7 +20,7 @@ window.onload = function () {
     const sheetNames = ["Flowers", "Flowers To Be Ordered"];
 
     const fetchPromises = sheetNames.map(sheetName => {
-        const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+        const url = `https://proxy.tele-b8d.workers.dev/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
         return fetch(url).then(response => response.text());
     });
 
