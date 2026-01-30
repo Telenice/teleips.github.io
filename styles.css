@@ -196,7 +196,6 @@ td {
     text-align: center;
     vertical-align: middle;
     padding: 12px 8px !important;
-    background-color: inherit !important;
 }
 
 .status-cell span {
@@ -211,10 +210,6 @@ td {
     width: auto;
     min-width: 110px;
     box-sizing: border-box;
-}
-
-.inStock, .outOfStock, .toBeOrdered, .nearExpiry {
-    background-color: transparent !important; 
 }
 
 .inStock span { background-color: #6ff3b8; color: #1e6946; }
