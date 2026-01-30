@@ -11,26 +11,50 @@ window.onload = function () {
     if (prefersDarkScheme) {
         document.body.classList.add("dark-mode");
         if(modeToggle) modeToggle.textContent = "☀️";
-    } else {
-        document.body.classList.remove("dark-mode");
-        if(modeToggle) modeToggle.textContent = "🌙";
     }
 
     if(modeToggle) modeToggle.addEventListener("click", toggleMode);
 
     const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
     const sheetNames = ["Flowers", "Flowers To Be Ordered"];
-
     const PROXY_URL = "https://proxy.tele-b8d.workers.dev/"; 
 
     const fetchPromises = sheetNames.map(sheetName => {
         const googleUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
         return fetch(PROXY_URL + "?url=" + encodeURIComponent(googleUrl))
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.text();
-            });
+            .then(response => response.text());
     });
+
+    function filtersativaIndica(val, filter) {
+        if (!filter) return true;
+        const text = val.toLowerCase();
+        if (filter === "Sativa") return text.includes("sativa");
+        if (filter === "Indica") return text.includes("indica");
+        if (filter === "Hybrid") return text.includes("hybrid") && !text.includes("sativa") && !text.includes("indica");
+        return true;
+    }
+
+    function filterTHC(thc, filter) {
+        if (!filter) return true;
+        const val = parseFloat(thc);
+        if (filter === "0-10") return val <= 10;
+        if (filter === "10-20") return val > 10 && val <= 20;
+        if (filter === "20-30") return val > 20 && val <= 30;
+        if (filter === "30+") return val > 30;
+        return true;
+    }
+
+    function filterCBD(cbd, filter) {
+        if (!filter) return true;
+        if (filter === "<1") return cbd.toString().includes("<1") || parseFloat(cbd) < 1;
+        if (filter === "Balanced") return parseFloat(cbd) >= 1 && !cbd.toString().includes("<");
+        return true;
+    }
+
+    function filterIrradiation(val, filter) {
+        if (!filter) return true;
+        return filter === "Yes" ? !val.toLowerCase().includes("non") : val.toLowerCase().includes("non");
+    }
 
     Promise.all(fetchPromises)
         .then(results => {
@@ -38,133 +62,108 @@ window.onload = function () {
             let packSizes = new Set();
 
             const extractJSON = (text) => {
-                try {
-                    const start = text.indexOf('{');
-                    const end = text.lastIndexOf('}');
-                    if (start === -1 || end === -1) throw new Error("Invalid JSON format from Google");
-                    const jsonString = text.substring(start, end + 1);
-                    return JSON.parse(jsonString);
-                } catch (e) {
-                    console.error("Parsing error on text:", text);
-                    throw e;
-                }
+                const start = text.indexOf('{');
+                const end = text.lastIndexOf('}');
+                return JSON.parse(text.substring(start, end + 1));
             };
-
-            const jsonFlowers = extractJSON(results[0]);
-            const jsonToBeOrdered = extractJSON(results[1]);
 
             const parseSheetData = (rows) => {
                 let parsedData = [];
                 if (!rows) return parsedData;
-
                 rows.forEach(row => {
-                    const stockAvailability = row.c[1]?.v || "Unknown";
-                    const brand = row.c[2]?.v || "Unknown";
-                    const thc = parseFloat(row.c[3]?.v) || 0;
-                    const cbd = row.c[4]?.v || "Unknown";
-                    const strain = row.c[5]?.v || "Unknown";
-                    const packSize = (row.c[6]?.v || "Unknown").toString().trim();
-                    const sativaIndica = row.c[7]?.v || "Unknown";
-                    const irradiation = row.c[8]?.v || "Unknown";
-                    const pricePG = row.c[9]?.v || "Unknown";
-                    const gapPricePG = row.c[10]?.v || "Unknown";
-                    
-                    if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica].includes("Unknown")) return;
-
-                    const gap = (parseFloat(pricePG) !== parseFloat(gapPricePG)) ? "Yes" : "No";
-
-                    const stockItem = {
-                        stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, irradiation, pricePG, gapPricePG, gap
+                    const item = {
+                        stockAvailability: row.c[1]?.v || "Unknown",
+                        brand: row.c[2]?.v || "Unknown",
+                        thc: row.c[3]?.v || 0,
+                        cbd: row.c[4]?.v || 0,
+                        strain: row.c[5]?.v || "Unknown",
+                        packSize: (row.c[6]?.v || "").toString().trim(),
+                        sativaIndica: row.c[7]?.v || "Unknown",
+                        irradiation: row.c[8]?.v || "Unknown",
+                        pricePG: row.c[9]?.v || 0,
+                        gapPricePG: row.c[10]?.v || 0,
+                        gap: (row.c[9]?.v !== row.c[10]?.v) ? "Yes" : "No"
                     };
-                    parsedData.push(stockItem);
-
-                    if (brand && brand !== "Unknown") {
-                        const brandLowerCase = brand.toLowerCase();
-                        if (!brands[brandLowerCase]) brands[brandLowerCase] = brand;
+                    if (item.brand !== "Unknown") {
+                        parsedData.push(item);
+                        brands[item.brand.toLowerCase()] = item.brand;
+                        if(item.packSize) packSizes.add(item.packSize);
                     }
-                    if (packSize && packSize !== "Unknown") packSizes.add(packSize);
                 });
                 return parsedData;
             };
 
-            let flowersData = parseSheetData(jsonFlowers.table?.rows);
-            const toBeOrderedData = parseSheetData(jsonToBeOrdered.table?.rows);
+            let stockData = parseSheetData(extractJSON(results[0]).table.rows);
+            const toOrder = parseSheetData(extractJSON(results[1]).table.rows);
+            stockData = stockData.concat(toOrder);
 
-            toBeOrderedData.forEach(itemToInsert => {
-                const brandToFind = itemToInsert.brand;
-                const lastIndex = flowersData.map(item => item.brand).lastIndexOf(brandToFind);
-                if (lastIndex !== -1) {
-                    flowersData.splice(lastIndex + 1, 0, itemToInsert);
-                } else {
-                    flowersData.push(itemToInsert);
-                }
-            });
-
-            const stockData = flowersData;
             const tableBody = document.querySelector("#stockTable tbody");
 
             function renderTable() {
-                if (!tableBody) return;
-
-                const filters = {
-                    brand: document.querySelector("[data-column='brand']")?.value,
-                    stock: document.querySelector("[data-column='stockAvailability']")?.value,
-                    type: document.querySelector("[data-column='sativaIndica']")?.value,
-                    search: document.querySelector("#search")?.value.toLowerCase()
+                const f = {
+                    search: document.querySelector("#search").value.toLowerCase(),
+                    stock: document.querySelector("#stockAvailability").value,
+                    brand: document.querySelector("#brand").value,
+                    type: document.querySelector("#sativaIndica").value,
+                    thc: document.querySelector("#thc").value,
+                    cbd: document.querySelector("#cbd").value,
+                    irradiation: document.querySelector("#irradiation").value,
+                    pack: document.querySelector("#packSize").value,
+                    gap: document.querySelector("#gap").value
                 };
 
                 tableBody.innerHTML = "";
 
-                stockData.forEach(stock => {
-                    const matchesSearch = !filters.search ||
-                        stock.strain.toLowerCase().includes(filters.search) ||
-                        stock.brand.toLowerCase().includes(filters.search);
+                stockData.forEach(s => {
+                    const matches = 
+                        (s.strain.toLowerCase().includes(f.search) || s.brand.toLowerCase().includes(f.search)) &&
+                        (!f.stock || s.stockAvailability === f.stock) &&
+                        (!f.brand || s.brand.toLowerCase() === f.brand.toLowerCase()) &&
+                        (!f.pack || s.packSize === f.pack) &&
+                        (!f.gap || s.gap === f.gap) &&
+                        filterTHC(s.thc, f.thc) &&
+                        filterCBD(s.cbd, f.cbd) &&
+                        filterIrradiation(s.irradiation, f.irradiation) &&
+                        filtersativaIndica(s.sativaIndica, f.type);
 
-                    const matchesBrand = !filters.brand || stock.brand.toLowerCase() === filters.brand.toLowerCase();
-                    const matchesStock = !filters.stock || stock.stockAvailability === filters.stock;
-
-                    const matchesType = !filters.type || filtersativaIndica(stock.sativaIndica, filters.type);
-
-                    if (matchesSearch && matchesBrand && matchesStock && matchesType) {
+                    if (matches) {
 
                         let statusClass = "outOfStock";
-                        const availability = stock.stockAvailability.trim();
-                        if (availability === "In Stock") statusClass = "inStock";
-                        else if (availability === "To be Ordered") statusClass = "toBeOrdered";
-                        else if (availability === "Near to Expiry Date") statusClass = "nearExpiry";
+                        if (s.stockAvailability === "In Stock") statusClass = "inStock";
+                        else if (s.stockAvailability === "To be Ordered") statusClass = "toBeOrdered";
+                        else if (s.stockAvailability === "Near to Expiry Date") statusClass = "nearExpiry";
 
-                        let row = `<tr>
-                <td class="status-cell ${statusClass}"><span>${stock.stockAvailability}</span></td>
-                <td>${stock.brand}</td>
-                <td>${stock.thc}</td>
-                <td>${stock.cbd}</td>
-                <td>${stock.strain}</td>
-                <td>${stock.packSize}</td>
-                <td>${stock.sativaIndica}</td>
-                <td>${stock.irradiation}</td>
-                <td>${stock.pricePG}</td>
-                <td>${stock.gapPricePG}</td>
-            </tr>`;
-                        tableBody.innerHTML += row;
+                        tableBody.innerHTML += `<tr>
+                            <td class="status-cell ${statusClass}"><span>${s.stockAvailability}</span></td>
+                            <td>${s.brand}</td>
+                            <td>${s.thc}</td>
+                            <td>${s.cbd}</td>
+                            <td>${s.strain}</td>
+                            <td>${s.packSize}</td>
+                            <td>${s.sativaIndica}</td>
+                            <td>${s.irradiation}</td>
+                            <td>${s.pricePG}</td>
+                            <td>${s.gapPricePG}</td>
+                        </tr>`;
                     }
                 });
             }
 
-            renderTable();
+            document.querySelectorAll(".filter").forEach(el => el.addEventListener("input", renderTable));
 
-            const brandSelect = document.querySelector("#brand");
-            if (brandSelect) {
-                Object.keys(brands).sort().forEach(brandKey => {
-                    const option = document.createElement("option");
-                    option.value = brandKey;
-                    option.textContent = brands[brandKey];
-                    brandSelect.appendChild(option);
-                });
-            }
+            Object.keys(brands).sort().forEach(k => {
+                const opt = new Option(brands[k], k);
+                document.querySelector("#brand").add(opt);
+            });
+            Array.from(packSizes).sort((a,b)=>a-b).forEach(p => {
+                const opt = new Option(p, p);
+                document.querySelector("#packSize").add(opt);
+            });
+
+            renderTable();
         })
-        .catch(error => {
-            console.error("Critical Failure:", error);
-            const tableBody = document.querySelector("#stockTable tbody");
-            if(tableBody) tableBody.innerHTML = `<tr><td colspan="11">Error: ${error.message}</td></tr>`;
+        .catch(err => {
+            console.error(err);
+            document.querySelector("#stockTable tbody").innerHTML = `<tr><td colspan="10">Error loading data.</td></tr>`;
         });
 };
