@@ -21,7 +21,7 @@ const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
 
     const fetchPromises = sheetNames.map(sheetName => {
         const googleUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-        const proxyUrl = 'https://proxy.tele-b8d.dev/?url=' + encodeURIComponent(googleUrl);
+        const proxyUrl = 'proxy.tele-b8d.workers.dev?url=' + encodeURIComponent(googleUrl);
         
         return fetch(proxyUrl).then(response => response.text());
     });
