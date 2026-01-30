@@ -159,7 +159,7 @@ td {
 }
 
 .dark-mode td {
-    background-color: #1e1e1e;
+    background-color: #1e1e1e !important;
     border-bottom: 1px solid #333;
 }
 
@@ -176,7 +176,7 @@ tr:hover td {
 }
 
 .dark-mode tr:hover td {
-    background-color: #2a2a2a;
+    background-color: #2a2a2a !important;
 }
 
 td {
@@ -192,10 +192,17 @@ td {
     overflow-wrap: break-word;
 }
 
+/* FIX: Ensure the first column doesn't have a unique background */
 .status-cell {
     text-align: center;
     vertical-align: middle;
     padding: 12px 8px !important;
+    background-color: #ffffff; /* Light mode default */
+}
+
+/* FIX: Dark mode override for the first column */
+.dark-mode .status-cell {
+    background-color: #1e1e1e !important;
 }
 
 .status-cell span {
@@ -212,6 +219,7 @@ td {
     box-sizing: border-box;
 }
 
+/* Status Colors - ONLY ON SPAN */
 .inStock span { background-color: #6ff3b8; color: #1e6946; }
 .nearExpiry span { background-color: #fce084; color: #664d03; }
 .toBeOrdered span { background-color: #cfe2ff; color: #084298; }
