@@ -16,12 +16,14 @@ window.onload = function () {
 
     document.getElementById("modeToggle").addEventListener("click", toggleMode);
 
-    const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
+const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
     const sheetNames = ["Flowers", "Flowers To Be Ordered"];
 
     const fetchPromises = sheetNames.map(sheetName => {
-        const url = `https://corsproxy.io/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
-        return fetch(url).then(response => response.text());
+        const googleUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+        const proxyUrl = 'https://proxy.tele-b8d.dev/?url=' + encodeURIComponent(googleUrl);
+        
+        return fetch(proxyUrl).then(response => response.text());
     });
 
     Promise.all(fetchPromises)
