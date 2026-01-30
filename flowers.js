@@ -18,6 +18,10 @@ window.onload = function () {
     const sheetNames = ["Flowers", "Flowers To Be Ordered"];
     const PROXY_URL = "https://proxy.tele-b8d.workers.dev/"; 
 
+    let allStockData = [];
+    let currentSortColumn = null;
+    let currentSortDirection = 'asc';
+
     const fetchPromises = sheetNames.map(sheetName => {
         const googleUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
         return fetch(PROXY_URL + "?url=" + encodeURIComponent(googleUrl))
@@ -60,11 +64,48 @@ window.onload = function () {
         return filter === "Yes" ? !isNon : isNon;
     }
 
+    function sortData(column) {
+        if (currentSortColumn === column) {
+            currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSortColumn = column;
+            currentSortDirection = 'asc';
+        }
+
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.classList.remove('sort-asc', 'sort-desc');
+            if (th.dataset.sort === column) {
+                th.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+            }
+        });
+
+        allStockData.sort((a, b) => {
+            let valA = a[column];
+            let valB = b[column];
+
+            if (['thc', 'pricePG', 'gapPricePG'].includes(column)) {
+                valA = parseFloat(valA) || 0;
+                valB = parseFloat(valB) || 0;
+            } else if (column === 'cbd') {
+                valA = valA.toString().includes('<') ? 0.5 : parseFloat(valA) || 0;
+                valB = valB.toString().includes('<') ? 0.5 : parseFloat(valB) || 0;
+            } else {
+                valA = valA.toString().toLowerCase();
+                valB = valB.toString().toLowerCase();
+            }
+
+            if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        renderTable();
+    }
+
     Promise.all(fetchPromises)
         .then(results => {
             let brands = {};
             let packSizes = new Set();
-            let allStockData = [];
 
             const extractJSON = (text) => {
                 const start = text.indexOf('{');
@@ -79,11 +120,8 @@ window.onload = function () {
 
                 rows.forEach(row => {
                     if (!row.c || row.c.length < 3) return;
-
                     const availText = (row.c[1]?.v || "").toString().trim();
                     const brandText = (row.c[2]?.v || "").toString().trim();
-
-                    // FIXED HEADER SKIP: Only skip if it's the literal title row
                     if (brandText === "Brand" || availText === "Stock Availability") return;
 
                     const item = {
@@ -117,7 +155,6 @@ window.onload = function () {
 
             function renderTable() {
                 if (!tableBody) return;
-
                 const f = {
                     search: document.getElementById("search")?.value.toLowerCase() || "",
                     stock: document.getElementById("stockAvailability")?.value || "",
@@ -131,30 +168,22 @@ window.onload = function () {
                 };
 
                 tableBody.innerHTML = "";
-
                 allStockData.forEach(s => {
-                    const matchesSearch = !f.search || 
-                        s.strain.toLowerCase().includes(f.search) || 
-                        s.brand.toLowerCase().includes(f.search);
-
+                    const matchesSearch = !f.search || s.strain.toLowerCase().includes(f.search) || s.brand.toLowerCase().includes(f.search);
                     const matchesStock = !f.stock || s.stockAvailability === f.stock;
                     const matchesBrand = !f.brand || s.brand.toLowerCase() === f.brand.toLowerCase();
                     const matchesPack = !f.pack || s.packSize === f.pack;
                     const matchesGap = !f.gap || s.gap === f.gap;
-
                     const matchesTHC = filterTHC(s.thc, f.thc);
                     const matchesCBD = filterCBD(s.cbd, f.cbd);
                     const matchesType = filterSativaIndica(s.sativaIndica, f.type);
                     const matchesIrradiation = filterIrradiation(s.irradiation, f.irradiation);
 
                     if (matchesSearch && matchesStock && matchesBrand && matchesPack && matchesGap && matchesTHC && matchesCBD && matchesType && matchesIrradiation) {
-                        
                         let statusClass = "outOfStock";
-                        const availability = s.stockAvailability;
-                        
-                        if (availability === "In Stock") statusClass = "inStock";
-                        else if (availability === "To be Ordered") statusClass = "toBeOrdered";
-                        else if (availability === "Near to Expiry Date") statusClass = "nearExpiry";
+                        if (s.stockAvailability === "In Stock") statusClass = "inStock";
+                        else if (s.stockAvailability === "To be Ordered") statusClass = "toBeOrdered";
+                        else if (s.stockAvailability === "Near to Expiry Date") statusClass = "nearExpiry";
 
                         tableBody.innerHTML += `<tr>
                             <td class="status-cell ${statusClass}"><span>${s.stockAvailability}</span></td>
@@ -175,6 +204,10 @@ window.onload = function () {
             document.querySelectorAll(".filter").forEach(el => {
                 el.addEventListener("input", renderTable);
                 el.addEventListener("change", renderTable);
+            });
+
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => sortData(th.dataset.sort));
             });
 
             const brandSelect = document.getElementById("brand");
