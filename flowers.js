@@ -80,20 +80,18 @@ window.onload = function () {
                 rows.forEach(row => {
                     if (!row.c || row.c.length < 3) return;
 
-                    const availText = (row.c[1]?.v || "").toString();
-                    const brandText = (row.c[2]?.v || "").toString();
-                    const strainText = (row.c[5]?.v || "").toString();
+                    const availText = (row.c[1]?.v || "").toString().trim();
+                    const brandText = (row.c[2]?.v || "").toString().trim();
 
-                    if (brandText.toLowerCase().includes("brand") || 
-                        strainText.toLowerCase().includes("strain") || 
-                        availText.toLowerCase().includes("stock")) return;
+                    // FIXED HEADER SKIP: Only skip if it's the literal title row
+                    if (brandText === "Brand" || availText === "Stock Availability") return;
 
                     const item = {
-                        stockAvailability: availText.trim(),
-                        brand: brandText.trim(),
+                        stockAvailability: availText,
+                        brand: brandText,
                         thc: row.c[3]?.v || 0,
                         cbd: row.c[4]?.v || 0,
-                        strain: strainText.trim(),
+                        strain: (row.c[5]?.v || "").toString().trim(),
                         packSize: (row.c[6]?.v || "").toString().trim(),
                         sativaIndica: row.c[7]?.v || "Unknown",
                         irradiation: row.c[8]?.v || "Unknown",
@@ -102,7 +100,7 @@ window.onload = function () {
                         gap: (row.c[9]?.v !== row.c[10]?.v) ? "Yes" : "No"
                     };
 
-                    if (item.brand && item.brand !== "Unknown") {
+                    if (item.brand && item.brand !== "Unknown" && item.brand !== "") {
                         parsedData.push(item);
                         brands[item.brand.toLowerCase()] = item.brand;
                         if(item.packSize && item.packSize !== "") packSizes.add(item.packSize);
