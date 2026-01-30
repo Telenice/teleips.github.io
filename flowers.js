@@ -1,16 +1,28 @@
 function toggleMode() {
-    document.body.classList.toggle("dark-mode");
+    const body = document.body;
+    body.classList.toggle("dark-mode");
+    const isDark = body.classList.contains("dark-mode");
+    
     const modeToggle = document.getElementById("modeToggle");
-    modeToggle.textContent = document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
+    if (modeToggle) modeToggle.textContent = isDark ? "☀️" : "🌙";
+
+    const safariMeta = document.getElementById("safari-theme");
+    if (safariMeta) {
+        safariMeta.setAttribute("content", isDark ? "#121212" : "#f8f9fa");
+    }
 }
 
 window.onload = function () {
-    const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const modeToggle = document.getElementById("modeToggle");
-    if (prefersDarkScheme) {
+    const safariMeta = document.getElementById("safari-theme");
+    
+    if (prefersDark) {
         document.body.classList.add("dark-mode");
         if (modeToggle) modeToggle.textContent = "☀️";
+        if (safariMeta) safariMeta.setAttribute("content", "#121212");
     }
+
     if (modeToggle) modeToggle.addEventListener("click", toggleMode);
 
     const sheetID = "1H1GtXBtISAGYE54dK8466HEK1h_d9cmC";
@@ -48,12 +60,6 @@ window.onload = function () {
         return true;
     }
 
-    function filterIrradiation(val, filter) {
-        if (!filter) return true;
-        const isNon = val.toLowerCase().includes("non");
-        return filter === "Yes" ? !isNon : isNon;
-    }
-
     function renderTable() {
         const tableBody = document.querySelector("#stockTable tbody");
         if (!tableBody) return;
@@ -72,25 +78,23 @@ window.onload = function () {
 
         tableBody.innerHTML = "";
         allStockData.forEach(s => {
-            const matchesSearch = !f.search || s.strain.toLowerCase().includes(f.search) || s.brand.toLowerCase().includes(f.search);
-            const matchesStock = !f.stock || s.stockAvailability === f.stock;
-            const matchesBrand = !f.brand || s.brand.toLowerCase() === f.brand.toLowerCase();
-            const matchesPack = !f.pack || s.packSize === f.pack;
-            const matchesGap = !f.gap || s.gap === f.gap;
-            const matchesTHC = filterTHC(s.thc, f.thc);
-            const matchesCBD = filterCBD(s.cbd, f.cbd);
-            const matchesType = filterSativaIndica(s.sativaIndica, f.type);
-            const matchesIrradiation = filterIrradiation(s.irradiation, f.irradiation);
+            const mSearch = !f.search || s.strain.toLowerCase().includes(f.search) || s.brand.toLowerCase().includes(f.search);
+            const mStock = !f.stock || s.stockAvailability === f.stock;
+            const mBrand = !f.brand || s.brand.toLowerCase() === f.brand.toLowerCase();
+            const mPack = !f.pack || s.packSize === f.pack;
+            const mGap = !f.gap || s.gap === f.gap;
+            const mTHC = filterTHC(s.thc, f.thc);
+            const mCBD = filterCBD(s.cbd, f.cbd);
+            const mType = filterSativaIndica(s.sativaIndica, f.type);
 
-            if (matchesSearch && matchesStock && matchesBrand && matchesPack && matchesGap && matchesTHC && matchesCBD && matchesType && matchesIrradiation) {
-                let statusClass = "outOfStock";
-                const availability = s.stockAvailability;
-                if (availability === "In Stock") statusClass = "inStock";
-                else if (availability === "To be Ordered") statusClass = "toBeOrdered";
-                else if (availability === "Near to Expiry Date") statusClass = "nearExpiry";
+            if (mSearch && mStock && mBrand && mPack && mGap && mTHC && mCBD && mType) {
+                let sClass = "outOfStock";
+                if (s.stockAvailability === "In Stock") sClass = "inStock";
+                else if (s.stockAvailability === "To be Ordered") sClass = "toBeOrdered";
+                else if (s.stockAvailability === "Near to Expiry Date") sClass = "nearExpiry";
 
                 tableBody.innerHTML += `<tr>
-                    <td class="status-cell ${statusClass}"><span>${s.stockAvailability}</span></td>
+                    <td class="status-cell ${sClass}"><span>${s.stockAvailability}</span></td>
                     <td>${s.brand}</td>
                     <td>${s.thc}</td>
                     <td>${s.cbd}</td>
@@ -105,127 +109,82 @@ window.onload = function () {
         });
     }
 
-    function sortData(column) {
-        if (currentSortColumn === column) {
+    function sortData(col) {
+        if (currentSortColumn === col) {
             currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            currentSortColumn = column;
+            currentSortColumn = col;
             currentSortDirection = 'asc';
         }
 
         document.querySelectorAll('th.sortable').forEach(th => {
             th.classList.remove('sort-asc', 'sort-desc');
-            if (th.dataset.sort === column) {
-                th.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
-            }
+            if (th.dataset.sort === col) th.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
         });
 
         allStockData.sort((a, b) => {
-            let valA = a[column];
-            let valB = b[column];
-
-            if (['thc', 'pricePG', 'gapPricePG'].includes(column)) {
-                valA = parseFloat(valA) || 0;
-                valB = parseFloat(valB) || 0;
-            } else if (column === 'cbd') {
-                valA = valA.toString().includes('<') ? 0.5 : parseFloat(valA) || 0;
-                valB = valB.toString().includes('<') ? 0.5 : parseFloat(valB) || 0;
+            let vA = a[col], vB = b[col];
+            if (['thc', 'pricePG', 'gapPricePG'].includes(col)) {
+                vA = parseFloat(vA) || 0; vB = parseFloat(vB) || 0;
             } else {
-                valA = valA.toString().toLowerCase();
-                valB = valB.toString().toLowerCase();
+                vA = vA.toString().toLowerCase(); vB = vB.toString().toLowerCase();
             }
-
-            if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
-            if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
-            return 0;
+            return currentSortDirection === 'asc' ? (vA < vB ? -1 : 1) : (vA > vB ? -1 : 1);
         });
-
         renderTable();
     }
 
-    const fetchPromises = sheetNames.map(sheetName => {
-        const googleUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-        return fetch(PROXY_URL + "?url=" + encodeURIComponent(googleUrl))
-            .then(response => {
-                if (!response.ok) throw new Error();
-                return response.text();
-            });
+    const fetchPromises = sheetNames.map(name => {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(name)}`;
+        return fetch(PROXY_URL + "?url=" + encodeURIComponent(url)).then(r => r.text());
     });
 
-    Promise.all(fetchPromises)
-        .then(results => {
-            let brands = {};
-            let packSizes = new Set();
-
-            const extractJSON = (text) => {
-                const start = text.indexOf('{');
-                const end = text.lastIndexOf('}');
-                return JSON.parse(text.substring(start, end + 1));
-            };
-
-            const parseSheetData = (rows) => {
-                let parsedData = [];
-                if (!rows) return parsedData;
-                rows.forEach(row => {
-                    if (!row.c || row.c.length < 3) return;
-                    const availText = (row.c[1]?.v || "").toString().trim();
-                    const brandText = (row.c[2]?.v || "").toString().trim();
-                    if (brandText === "Brand" || availText === "Stock Availability") return;
-
-                    const item = {
-                        stockAvailability: availText,
-                        brand: brandText,
-                        thc: row.c[3]?.v || 0,
-                        cbd: row.c[4]?.v || 0,
-                        strain: (row.c[5]?.v || "").toString().trim(),
-                        packSize: (row.c[6]?.v || "").toString().trim(),
-                        sativaIndica: row.c[7]?.v || "Unknown",
-                        irradiation: row.c[8]?.v || "Unknown",
-                        pricePG: row.c[9]?.v || 0,
-                        gapPricePG: row.c[10]?.v || 0,
-                        gap: (row.c[9]?.v !== row.c[10]?.v) ? "Yes" : "No"
-                    };
-
-                    if (item.brand && item.brand !== "Unknown") {
-                        parsedData.push(item);
-                        brands[item.brand.toLowerCase()] = item.brand;
-                        if (item.packSize) packSizes.add(item.packSize);
-                    }
-                });
-                return parsedData;
-            };
-
-            const flowersData = parseSheetData(extractJSON(results[0]).table.rows);
-            const toOrderData = parseSheetData(extractJSON(results[1]).table.rows);
-            allStockData = flowersData.concat(toOrderData);
-
-            document.querySelectorAll(".filter").forEach(el => {
-                el.addEventListener("input", renderTable);
-                el.addEventListener("change", renderTable);
+    Promise.all(fetchPromises).then(results => {
+        let brands = {}, packSizes = new Set();
+        const extract = (t) => JSON.parse(t.substring(t.indexOf('{'), t.lastIndexOf('}') + 1));
+        
+        const parse = (rows) => {
+            let data = [];
+            if (!rows) return data;
+            rows.forEach(r => {
+                if (!r.c || r.c.length < 3) return;
+                const av = (r.c[1]?.v || "").toString().trim();
+                const br = (r.c[2]?.v || "").toString().trim();
+                if (br === "Brand" || av === "Stock Availability") return;
+                const item = {
+                    stockAvailability: av, brand: br, thc: r.c[3]?.v || 0, cbd: r.c[4]?.v || 0,
+                    strain: (r.c[5]?.v || "").toString().trim(), packSize: (r.c[6]?.v || "").toString().trim(),
+                    sativaIndica: r.c[7]?.v || "Unknown", irradiation: r.c[8]?.v || "Unknown",
+                    pricePG: r.c[9]?.v || 0, gapPricePG: r.c[10]?.v || 0, gap: (r.c[9]?.v !== r.c[10]?.v) ? "Yes" : "No"
+                };
+                if (item.brand && item.brand !== "Unknown") {
+                    data.push(item);
+                    brands[item.brand.toLowerCase()] = item.brand;
+                    if (item.packSize) packSizes.add(item.packSize);
+                }
             });
+            return data;
+        };
 
-            document.querySelectorAll('th.sortable').forEach(th => {
-                th.addEventListener('click', () => sortData(th.dataset.sort));
-            });
+        const f1 = parse(extract(results[0]).table.rows);
+        const f2 = parse(extract(results[1]).table.rows);
+        allStockData = f1.concat(f2);
 
-            const brandSelect = document.getElementById("brand");
-            if (brandSelect) {
-                Object.keys(brands).sort().forEach(k => {
-                    brandSelect.add(new Option(brands[k], k));
-                });
-            }
-
-            const packSelect = document.getElementById("packSize");
-            if (packSelect) {
-                Array.from(packSizes).sort((a, b) => parseFloat(a) - parseFloat(b)).forEach(p => {
-                    packSelect.add(new Option(p, p));
-                });
-            }
-
-            renderTable();
-        })
-        .catch(err => {
-            const tableBody = document.querySelector("#stockTable tbody");
-            if (tableBody) tableBody.innerHTML = `<tr><td colspan="10">Error loading data.</td></tr>`;
+        document.querySelectorAll(".filter").forEach(el => {
+            el.addEventListener("input", renderTable);
+            el.addEventListener("change", renderTable);
         });
+
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.addEventListener('click', () => sortData(th.dataset.sort));
+        });
+
+        const bSel = document.getElementById("brand");
+        Object.keys(brands).sort().forEach(k => bSel.add(new Option(brands[k], k)));
+
+        const pSel = document.getElementById("packSize");
+        Array.from(packSizes).sort((a,b) => parseFloat(a)-parseFloat(b)).forEach(p => pSel.add(new Option(p, p)));
+
+        renderTable();
+    });
 };
