@@ -78,17 +78,22 @@ window.onload = function () {
                 if (!rows) return parsedData;
 
                 rows.forEach(row => {
-                    if (!row.c || !row.c[2]) return;
+                    if (!row.c || row.c.length < 3) return;
 
-                    const col2Value = row.c[2]?.v || "";
-                    if (col2Value === "Brand" || col2Value === "Product") return;
+                    const availText = (row.c[1]?.v || "").toString();
+                    const brandText = (row.c[2]?.v || "").toString();
+                    const strainText = (row.c[5]?.v || "").toString();
+
+                    if (brandText.toLowerCase().includes("brand") || 
+                        strainText.toLowerCase().includes("strain") || 
+                        availText.toLowerCase().includes("stock")) return;
 
                     const item = {
-                        stockAvailability: row.c[1]?.v || "Unknown",
-                        brand: (row.c[2]?.v || "Unknown").trim(),
+                        stockAvailability: availText.trim(),
+                        brand: brandText.trim(),
                         thc: row.c[3]?.v || 0,
                         cbd: row.c[4]?.v || 0,
-                        strain: row.c[5]?.v || "Unknown",
+                        strain: strainText.trim(),
                         packSize: (row.c[6]?.v || "").toString().trim(),
                         sativaIndica: row.c[7]?.v || "Unknown",
                         irradiation: row.c[8]?.v || "Unknown",
@@ -97,10 +102,10 @@ window.onload = function () {
                         gap: (row.c[9]?.v !== row.c[10]?.v) ? "Yes" : "No"
                     };
 
-                    if (item.brand !== "Unknown" && item.brand !== "") {
+                    if (item.brand && item.brand !== "Unknown") {
                         parsedData.push(item);
                         brands[item.brand.toLowerCase()] = item.brand;
-                        if(item.packSize && item.packSize !== "Unknown") packSizes.add(item.packSize);
+                        if(item.packSize && item.packSize !== "") packSizes.add(item.packSize);
                     }
                 });
                 return parsedData;
@@ -147,7 +152,7 @@ window.onload = function () {
                     if (matchesSearch && matchesStock && matchesBrand && matchesPack && matchesGap && matchesTHC && matchesCBD && matchesType && matchesIrradiation) {
                         
                         let statusClass = "outOfStock";
-                        const availability = s.stockAvailability.trim();
+                        const availability = s.stockAvailability;
                         
                         if (availability === "In Stock") statusClass = "inStock";
                         else if (availability === "To be Ordered") statusClass = "toBeOrdered";
