@@ -42,14 +42,13 @@ window.onload = function () {
                 const packSize = (row.c[6]?.v || "Unknown").toString().trim();
                 const sativaIndica = row.c[7]?.v || "Unknown";
                 const pricePG = row.c[9]?.v || "Unknown";
-                const gapPricePG = row.c[10]?.v || "Unknown";
 
-                if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG, gapPricePG].includes("Unknown")) {
+                if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG].includes("Unknown")) {
                     return;
                 }
 
                 stockData.push({
-                    stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG, gapPricePG
+                    stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, pricePG
                 });
 
                 if (brand && brand !== "Unknown") {
@@ -96,7 +95,7 @@ window.onload = function () {
                     let valA = a[column];
                     let valB = b[column];
 
-                    if (['pricePG', 'gapPricePG'].includes(column)) {
+                    if (['pricePG'].includes(column)) {
                         valA = parseVal(valA);
                         valB = parseVal(valB);
                     }
@@ -150,7 +149,6 @@ window.onload = function () {
                             <td>${stock.packSize}</td>
                             <td>${stock.sativaIndica}</td>
                             <td>${stock.pricePG}</td>
-                            <td>${stock.gapPricePG}</td>
                         </tr>`;
 
                         tableBody.innerHTML += row;
