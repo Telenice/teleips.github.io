@@ -43,16 +43,13 @@ window.onload = function () {
                     const sativaIndica = row.c[7]?.v || "Unknown";
                     const irradiation = row.c[8]?.v || "Unknown";
                     const pricePG = row.c[9]?.v || "Unknown";
-                    const gapPricePG = row.c[10]?.v || "Unknown";
                     
                     if ([stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica].includes("Unknown")) {
                         return;
                     }
 
-                    const gap = (parseFloat(pricePG) !== parseFloat(gapPricePG)) ? "Yes" : "No";
-
                     const stockItem = {
-                        stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, irradiation, pricePG, gapPricePG, gap
+                        stockAvailability, brand, thc, cbd, strain, packSize, sativaIndica, irradiation, pricePG
                     };
                     parsedData.push(stockItem);
 
@@ -119,7 +116,7 @@ window.onload = function () {
                     let valA = a[column];
                     let valB = b[column];
 
-                    if (['thc', 'pricePG', 'gapPricePG'].includes(column)) {
+                    if (['thc', 'pricePG'].includes(column)) {
                         valA = parseVal(valA);
                         valB = parseVal(valB);
                     } 
@@ -151,7 +148,6 @@ window.onload = function () {
                 const cbdFilter = document.querySelector("[data-column='cbd']").value;
                 const irradiationFilter = document.querySelector("[data-column='irradiation']").value;
                 const packSizeFilter = document.querySelector("[data-column='packSize']").value;
-                const gapFilter = document.querySelector("[data-column='gap']").value;
                 const searchFilter = document.querySelector("#search").value.toLowerCase();
 
                 tableBody.innerHTML = "";
@@ -167,7 +163,6 @@ window.onload = function () {
                         (!cbdFilter || filterCBD(stock.cbd, cbdFilter)) &&
                         (!irradiationFilter || filterIrradiation(stock.irradiation, irradiationFilter)) &&
                         (!packSizeFilter || stock.packSize.trim() === packSizeFilter.trim()) &&
-                        (!gapFilter || stock.gap === gapFilter) &&
                         matchesSearch) {
 
                         let stockAvailabilityClass = "";
@@ -196,7 +191,6 @@ window.onload = function () {
                             <td>${stock.sativaIndica}</td>
                             <td>${stock.irradiation}</td>
                             <td>${stock.pricePG}</td>
-                            <td>${stock.gapPricePG}</td>
                         </tr>`;
 
                         tableBody.innerHTML += row;
