@@ -4,6 +4,38 @@ function toggleMode() {
     modeToggle.textContent = document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
 }
 
+function parseGoogleSheetResponse(data, sheetName) {
+    const wrapper = "google.visualization.Query.setResponse(";
+    const start = data.indexOf(wrapper);
+    const end = data.lastIndexOf(");");
+
+    if (start === -1 || end === -1 || end <= start) {
+        const plainText = data.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        const pageNotFound = plainText.includes("Sorry, the file you have requested does not exist");
+        const accessDenied = plainText.includes("You need access") || plainText.includes("Request access");
+        const reason = pageNotFound
+            ? "Google says the spreadsheet does not exist. Check the spreadsheet ID."
+            : accessDenied
+                ? "Google says this spreadsheet is not publicly accessible."
+                : "Google did not return sheet JSON.";
+
+        throw new Error(`${reason} Sheet: ${sheetName}.`);
+    }
+
+    const json = JSON.parse(data.slice(start + wrapper.length, end));
+
+    if (json.status === "error") {
+        const message = (json.errors || [])
+            .map(error => error.detailed_message || error.message)
+            .filter(Boolean)
+            .join(" ");
+
+        throw new Error(`Google Sheets error for "${sheetName}": ${message || "Unknown error"}`);
+    }
+
+    return json;
+}
+
 window.onload = function () {
     const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
     if (prefersDarkScheme) {
@@ -16,14 +48,14 @@ window.onload = function () {
 
     document.getElementById("modeToggle").addEventListener("click", toggleMode);
 
-    const sheetID = "1w0y1f9r3phixUQROyPn0U-R3LUi_4iA";
+    const sheetID = "1w0y1f9r3phixUQROyPn0U-R3LUi_4iAf";
     const sheetName = "Oils";
     const url = `https://proxy.tele-b8d.workers.dev/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
 
     fetch(url)
         .then(response => response.text())
         .then(data => {
-            const json = JSON.parse(data.substring(47, data.length - 2));
+            const json = parseGoogleSheetResponse(data, sheetName);
             const rows = json.table.rows;
             const tableBody = document.querySelector("#stockTable tbody");
 
@@ -195,5 +227,18 @@ window.onload = function () {
                 option.textContent = packSize;
                 packSizeDropdown.appendChild(option);
             });
+        })
+        .catch(error => {
+            console.error("Failed to fetch or process sheet data:", error);
+            const tableBody = document.querySelector("#stockTable tbody");
+            tableBody.textContent = "";
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 8;
+            cell.className = "error-cell";
+            cell.setAttribute("data-label", "Notice");
+            cell.textContent = `Error: Could not load data from the spreadsheet. ${error.message}`;
+            row.appendChild(cell);
+            tableBody.appendChild(row);
         });
 };
