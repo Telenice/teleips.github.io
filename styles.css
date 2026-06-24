@@ -311,20 +311,6 @@ body.dark-mode tbody tr:nth-child(even) td {
     background: rgba(22, 33, 40, 0.46);
 }
 
-tbody td.error-cell,
-tbody tr:nth-child(even) td.error-cell {
-    color: #7d161f;
-    font-weight: 700;
-    text-align: center;
-    background: rgba(255, 133, 133, 0.2);
-}
-
-body.dark-mode tbody td.error-cell,
-body.dark-mode tbody tr:nth-child(even) td.error-cell {
-    color: #ffe0e3;
-    background: rgba(132, 32, 41, 0.28);
-}
-
 tr:last-child td {
     border-bottom: 0;
 }
@@ -600,10 +586,6 @@ th.sort-desc .sort-icon::after {
         min-width: 0;
         max-width: 100%;
         white-space: normal;
-    }
-
-    .error-cell {
-        text-align: left;
     }
 }
 
