@@ -16,7 +16,7 @@ window.onload = function () {
 
     document.getElementById("modeToggle").addEventListener("click", toggleMode);
 
-    const sheetID = "1w0y1f9r3phixUQROyPn0U-R3LUi_4iA";
+    const sheetID = "1thcH9y9rBfeCkHGBybo5ZeQ0vVu9T1K7";
     const sheetName = "Oils";
     const url = `https://proxy.tele-b8d.workers.dev/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
 
@@ -141,14 +141,14 @@ window.onload = function () {
                         }
 
                         let row = `<tr>
-                            <td data-label="Stock Availability" class="status-cell ${stockAvailabilityClass}"><span>${stock.stockAvailability}</span></td>
-                            <td data-label="Brand">${stock.brand}</td>
-                            <td data-label="THC %">${stock.thc}</td>
-                            <td data-label="CBD %">${stock.cbd}</td>
-                            <td data-label="Full Spectrum/Isolate">${stock.strain}</td>
-                            <td data-label="Pack Size (ML)">${stock.packSize}</td>
-                            <td data-label="Sativa:Indica">${stock.sativaIndica}</td>
-                            <td data-label="Price P/G">${stock.pricePG}</td>
+                            <td class="status-cell ${stockAvailabilityClass}"><span>${stock.stockAvailability}</span></td>
+                            <td>${stock.brand}</td>
+                            <td>${stock.thc}</td>
+                            <td>${stock.cbd}</td>
+                            <td>${stock.strain}</td>
+                            <td>${stock.packSize}</td>
+                            <td>${stock.sativaIndica}</td>
+                            <td>${stock.pricePG}</td>
                         </tr>`;
 
                         tableBody.innerHTML += row;
