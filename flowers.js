@@ -4,6 +4,41 @@ function toggleMode() {
     modeToggle.textContent = document.body.classList.contains("dark-mode") ? "☀️" : "🌙";
 }
 
+function getLastUpdatedText(rows) {
+    const updateCells = (rows || []).flatMap(row => row?.c || []);
+    const updateValue = updateCells
+        .map(cell => cell?.v || cell?.f || "")
+        .find(value => /updated/i.test(value.toString()));
+
+    if (!updateValue) return "";
+
+    return updateValue.toString().replace(/^.*?\bupdated on\s*/i, "").trim();
+}
+
+function renderLastUpdated(rows) {
+    const lastUpdated = getLastUpdatedText(rows);
+    const lastUpdatedElement = document.getElementById("lastUpdated");
+
+    if (!lastUpdatedElement || !lastUpdated) return;
+
+    lastUpdatedElement.textContent = `Last Updated: ${lastUpdated}`;
+    lastUpdatedElement.hidden = false;
+}
+
+function fetchLastUpdated(sheetID, sheetName) {
+    const url = `https://proxy.tele-b8d.workers.dev/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&range=C6:J6&headers=0`;
+
+    fetch(url)
+        .then(response => response.text())
+        .then(data => {
+            const json = JSON.parse(data.substring(47, data.length - 2));
+            renderLastUpdated(json.table?.rows);
+        })
+        .catch(error => {
+            console.error("Failed to fetch last updated timestamp:", error);
+        });
+}
+
 window.onload = function () {
     const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
     if (prefersDarkScheme) {
@@ -18,6 +53,8 @@ window.onload = function () {
 
     const sheetID = "1w0y1f9r3phixUQROyPn0U-R3LUi_4iAf";
     const sheetNames = ["Flowers", "Flowers To Be Ordered"];
+
+    fetchLastUpdated(sheetID, sheetNames[0]);
 
     const fetchPromises = sheetNames.map(sheetName => {
         const url = `https://proxy.tele-b8d.workers.dev/?https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
